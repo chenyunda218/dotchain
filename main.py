@@ -7,7 +7,7 @@ from runtime.tokenizer import Tokenizer
 import json
 
 script = """
-let hello = +123;
+let hello = 123;
 """
 
 binary_script = """

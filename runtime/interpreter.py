@@ -59,14 +59,15 @@ class Interpreter:
             return self.string_literal()
         elif tokenType == "BOOL":
             return self.bool_literal()
+        elif _is_unary(self._get_token()):
+            return self.unary_expression()
         if tokenType == ";":
             self.tkr.eat(";")
             return EmptyStatement()
-        if _is_unary(self._get_token()):
-            token = self.tkr.eat(self._get_token_type())
-            expression = UnaryExpression(token.value, self.expression())
-        if self._get_token_type() == ";":
-            return expression
+        return EmptyStatement()
+    
+    def unary_expression(self):
+        return UnaryExpression("+", BoolLiteral(False))
     
     def int_literal(self):
         return int_literal(self.tkr)
@@ -83,9 +84,21 @@ class Interpreter:
     def identifier(self):
         return identifier(self.tkr)
 
+def literal_parser(tkr: Tokenizer):
+    token = tkr.get_current_token()
+    if token.type == "INT":
+        return int_literal(tkr)
+    elif token.type == "FLOAT":
+        return float_literal(tkr)
+    elif token.type == "STRING":
+        return string_literal(tkr)
+    elif token.type == "BOOL":
+        return bool_literal(tkr)
+    raise Exception("Invalid literal")
+
 def int_literal(tkr: Tokenizer):
-        token = tkr.eat("INT")
-        return IntLiteral(int(token.value))
+    token = tkr.eat("INT")
+    return IntLiteral(int(token.value))
     
 def float_literal(tkr: Tokenizer):
     token = tkr.eat("FLOAT")
@@ -105,6 +118,13 @@ def identifier(tkr: Tokenizer):
     token = tkr.get_current_token()
     tkr.eat(identifier_string)
     return Identifier(token.value)
+
+def let_parser(tkr: Tokenizer):
+    tkr.eat("let")
+    id = identifier(tkr)
+    tkr.eat("=")
+    expression = expression(tkr)
+    return VariableDeclaration(id, expression)
 
 def binary_expression(stack: list[Token] = None):
     if stack is None or len(stack) == 0:

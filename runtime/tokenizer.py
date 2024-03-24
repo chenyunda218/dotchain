@@ -117,6 +117,7 @@ class Tokenizer:
         raise Exception("Unknown token: " + _string[0])
 
     def init(self, script: str):
+        self.current_token = None
         self.script = script
         self.cursor = 0
         self.col = 0
@@ -168,6 +169,6 @@ class Tokenizer:
         if token == None:
             raise Exception("Unexpected EOF")
         if token.type != tokenType:
-            raise Exception("Unexpected token: {token.type} != {tokenType}")
+            raise Exception("Unexpected token: {} != {}".format(token.type, tokenType))
         self.get_next_token()
         return token
