@@ -1,5 +1,7 @@
 import re
 
+from attr import dataclass
+
 specs = (
     (re.compile(r"^\n"), "NEW_LINE"),
     # Space:
@@ -53,23 +55,22 @@ specs = (
     (re.compile(r"^!"), "NOT"),
 
     # Math operators: +, -, *, /:
-    (re.compile(r"^[*/]"), "MATH_OPERATORS"),
-    (re.compile(r"^[+-]"), "MATH_OPERATORS"),
+    (re.compile(r"^[*/]"), "MULTIPLICATIVE_OPERATOR"),
+    (re.compile(r"^[+-]"), "ADDITIVE_OPERATOR"),
 
     # Double-quoted strings
     (re.compile(r"^\"[^\"]*\""), "STRING"),
 )
 
+@dataclass
 class Token:
+    type: str
+    value: str
+    row: int
+    col: int
+    col_end: int
+    cursor: int
     
-    def __init__(self, type: str, value: str, cursor = 0, row = 0, col = 0, col_end = 0) -> None:
-        self.type = type
-        self.value = value
-        self.row = row
-        self.col = col
-        self.col_end = col_end
-        self.cursor = cursor
-
     def __str__(self) -> str:
         return f"Token({self.type}, {self.value}, row={self.row}, col={self.col}, col_end={self.col_end}, cursor={self.cursor})"
 
@@ -82,22 +83,16 @@ class Tokenizer:
         self.cursor = 0
         self.col = 0
         self.row = 0
-    
-    def init(self, script: str):
-        self.script = script
-        self.cursor = 0
-        self.col = 0
-        self.row = 0
 
-    def isEOF(self):
-        return self.cursor == len(self.script)
+    def __iter__(self):
+        return self
     
-    def has_more_tokens(self):
-        return self.cursor < len(self.script)
-
-    def get_current_token(self):
+    def __next__(self):
+        self.current_token = self.get_next_token()
+        if self.current_token == None:
+            raise StopIteration
         return self.current_token
-
+    
     def get_next_token(self):
         if self.isEOF():
             self.current_token = None
@@ -120,6 +115,21 @@ class Tokenizer:
             self.col += offset
             return self.get_current_token()
         raise Exception("Unknown token: " + _string[0])
+
+    def init(self, script: str):
+        self.script = script
+        self.cursor = 0
+        self.col = 0
+        self.row = 0
+
+    def isEOF(self):
+        return self.cursor == len(self.script)
+    
+    def has_more_tokens(self):
+        return self.cursor < len(self.script)
+
+    def get_current_token(self):
+        return self.current_token
     
     def match(self, reg: re, _script):
         matched = reg.search(_script)
@@ -144,11 +154,20 @@ class Tokenizer:
         t.current_token = self.current_token
         return t
 
+    def token_list(self):
+        tokens = []
+        tokenizer = self.clone()
+        token = tokenizer.get_next_token()
+        while token is not None:
+            tokens.append(token)
+            token = tokenizer.get_next_token()
+        return tokens
+
     def eat(self, tokenType: str) -> Token:
         token = self.get_current_token()
         if token == None:
             raise Exception("Unexpected EOF")
         if token.type != tokenType:
-            raise Exception("Unexpected token: " + token.type)
+            raise Exception("Unexpected token: {token.type} != {tokenType}")
         self.get_next_token()
         return token

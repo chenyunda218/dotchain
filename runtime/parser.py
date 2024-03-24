@@ -1,20 +1,5 @@
-from runtime.ast.argument import Argument
-from runtime.ast.assignment import Assignment
-from runtime.ast.binary_expression import BinaryExpression
-from runtime.ast.block import Block
-from runtime.ast.call_expression import CallExpression
-from runtime.ast.fun import Fun
-from runtime.ast.identifier import Identifier
-from runtime.ast.literal.bool import BoolLiteral
-from runtime.ast.literal.float import FloatLiteral
-from runtime.ast.literal.int import IntLiteral
-from runtime.ast.literal.literal import Literal
-from runtime.ast.literal.numerical import NumericalLiteral
-from runtime.ast.literal.string import StringLiteral
-from runtime.ast.statement import Statement
-from runtime.ast.unary_expression import UnaryExpression
-from runtime.ast.variable_declaration import VariableDeclaration
-from .ast.program import Program
+
+from runtime.ast import Assignment, BinaryExpression, CallExpression, IntLiteral, Literal, Program, Statement, StringLiteral, UnaryExpression, VariableDeclaration
 from .tokenizer import Tokenizer, Token
 
 

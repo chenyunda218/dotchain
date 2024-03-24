@@ -1,0 +1,181 @@
+from abc import ABC, abstractmethod
+
+from attr import dataclass
+
+class Node(ABC):
+    pass
+
+@dataclass
+class Statement(Node, ABC):
+    
+    @abstractmethod
+    def dict(self):
+        pass
+
+@dataclass
+class Expression(Node):
+
+    @abstractmethod
+    def dict(self):
+        pass
+
+@dataclass
+class Literal(Expression):
+    value: str | int | float | bool
+
+    def dict(self) -> dict:
+        return {
+            "type": "Literal",
+            "value": self.value
+        }
+@dataclass
+class StringLiteral(Literal):
+    value: str
+
+    def dict(self) -> dict:
+        return {
+            "type": "StringLiteral",
+            "value": self.value
+        }
+@dataclass
+class IntLiteral(Literal):
+    value: int
+
+    def dict(self):
+        return {
+            "type": "IntLiteral",
+            "value": self.value
+        }
+@dataclass
+class FloatLiteral(Literal):
+    value: float
+
+    def dict(self):
+        return {
+            "type": "FloatLiteral",
+            "value": self.value
+        }
+@dataclass
+class BoolLiteral(Literal):
+    value: bool
+    
+@dataclass
+class UnaryExpression(Expression):
+    operator: str
+    expression: Expression
+
+    def dict(self):
+        return {
+            "type": "UnaryExpression",
+            "operator": self.operator,
+            "argument": self.expression.dict()
+        }
+
+@dataclass
+class Program(Statement):
+    body: list[Statement]
+
+    def dict(self):
+        return {
+            "type": "Program",
+            "body": [statement.dict() for statement in self.body]
+        }
+@dataclass
+class Identifier(Expression):
+    name: str
+
+    def dict(self):
+        return {
+            "type": "Identifier",
+            "name": self.name
+        }
+    
+@dataclass
+class Block(Statement):
+    body: list[Statement]
+
+    def dict(self):
+        return {
+            "type": "Block",
+            "body": [statement.dict() for statement in self.body]
+        }
+    
+@dataclass
+class VariableDeclaration(Statement):
+    id: Identifier
+    value: Statement
+
+    def dict(self):
+        return {
+            "type": "VariableDeclaration",
+            "id": self.id.dict(),
+            "value": self.value.dict()
+        }
+
+@dataclass
+class Assignment(Statement):
+    id: Identifier
+    value: Statement
+
+    def dict(self):
+        return {
+            "type": "Assignment",
+            "id": self.id.dict(),
+            "value": self.value.dict()
+        }
+    
+@dataclass
+class Argument(Expression):
+    id: Identifier
+    value: Expression
+
+    def dict(self):
+        return {
+            "type": "Argument",
+            "id": self.id.dict(),
+            "value": self.value.dict()
+        }
+
+@dataclass
+class BinaryExpression(Expression):
+    left: Expression
+    operator: str
+    right: Expression
+
+    def dict(self):
+        return {
+            "type": "BinaryExpression",
+            "left": self.left.dict(),
+            "operator": self.operator,
+            "right": self.right.dict()
+        }
+    
+@dataclass
+class CallExpression(Expression):
+    callee: Identifier
+    arguments: list[Expression]
+
+    def dict(self):
+        return {
+            "type": "CallExpression",
+            "callee": self.callee.dict(),
+            "arguments": [argument.dict() for argument in self.arguments]
+        }
+
+@dataclass
+class Fun(Statement):
+    params: list[Identifier]
+    body: Block
+
+    def dict(self):
+        return {
+            "type": "Fun",
+            "params": [param.dict() for param in self.params],
+            "body": self.body.dict()
+        }
+    
+class EmptyStatement(Statement):
+    def dict(self):
+        return {
+            "type": "EmptyStatement"
+        }
