@@ -39,23 +39,24 @@ specs = (
     # Identifiers:
     (re.compile(r"^\w+"), "IDENTIFIER"),
 
-    # Assignment:
-    (re.compile(r"^="), "="),
 
     # Logical operators:
     (re.compile(r"^&&"), "LOGICAL_OPERATOR"),
     (re.compile(r"^\|\|"), "LOGICAL_OPERATOR"),
     (re.compile(r"^=="), "LOGICAL_OPERATOR"),
     (re.compile(r"^!="), "LOGICAL_OPERATOR"),
-    (re.compile(r"^<"), "LOGICAL_OPERATOR"),
-    (re.compile(r"^>"), "LOGICAL_OPERATOR"),
     (re.compile(r"^<="), "LOGICAL_OPERATOR"),
     (re.compile(r"^>="), "LOGICAL_OPERATOR"),
+    (re.compile(r"^<"), "LOGICAL_OPERATOR"),
+    (re.compile(r"^>"), "LOGICAL_OPERATOR"),
 
     (re.compile(r"^!"), "NOT"),
 
+    # Assignment:
+    (re.compile(r"^="), "="),
+
     # Math operators: +, -, *, /:
-    (re.compile(r"^[*/]"), "MULTIPLICATIVE_OPERATOR"),
+    (re.compile(r"^[*/%]"), "MULTIPLICATIVE_OPERATOR"),
     (re.compile(r"^[+-]"), "ADDITIVE_OPERATOR"),
 
     # Double-quoted strings
@@ -122,12 +123,21 @@ class Tokenizer:
         self.cursor = 0
         self.col = 0
         self.row = 0
+    
+    def init_and_next(self,script: str):
+        self.init(script)
+        return self.get_next_token()
 
     def isEOF(self):
         return self.cursor == len(self.script)
     
     def has_more_tokens(self):
         return self.cursor < len(self.script)
+
+    def type_is(self, tokenType: str):
+        if self.current_token == None:
+            return False
+        return self.current_token.type == tokenType
 
     def get_current_token(self):
         return self.current_token
@@ -148,13 +158,6 @@ class Tokenizer:
             token = tokenizer.get_next_token()
         return tokens
 
-    def clone(self):
-        t = Tokenizer()
-        t.script = self.script
-        t.cursor = self.cursor
-        t.current_token = self.current_token
-        return t
-
     def token_list(self):
         tokens = []
         tokenizer = self.clone()
@@ -172,3 +175,15 @@ class Tokenizer:
             raise Exception("Unexpected token: {} != {}".format(token.type, tokenType))
         self.get_next_token()
         return token
+    
+    def copy(self, tokenizer):
+        self.current_token = tokenizer.current_token
+        self.script = tokenizer.script
+        self.cursor = tokenizer.cursor
+        self.col = tokenizer.col
+        self.row = tokenizer.row
+
+    def clone(self):
+        t = Tokenizer()
+        t.copy(self)
+        return t

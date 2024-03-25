@@ -20,3 +20,7 @@ add(3, add(1,2))
 // 以 . 呼叫函數，將以 . 前的值作為第一個參數
 // hello.add(2) == add(hello, 2)
 ```
+
+```bash
+python -m unittest
+```
