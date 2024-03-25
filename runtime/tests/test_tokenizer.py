@@ -1,5 +1,6 @@
+
 import unittest
-from runtime.tokenizer import Tokenizer
+from runtime.tokenizer import TokenType, Tokenizer,Token
 
 
 
@@ -11,157 +12,117 @@ class TestTokenizer(unittest.TestCase):
         self.assertEqual(t.cursor, 0)
         self.assertEqual(t.col, 0)
         self.assertEqual(t.row, 0)
-        self.assertEqual(t.isEOF(), True)
-        self.assertEqual(t.get_current_token(), None)
-    
-    def test_init_script(self):
-        test_script = """
-        let hello = 123;
-        """
-        t = Tokenizer()
-        t.init(test_script)
-        self.assertEqual(len(t.token_list()), 5)
-
-    def test_clone(self):
-        t = Tokenizer()
-        t.init("let hello = 123;")
-        t.get_current_token()
-        t2 = t.clone()
-        self.assertEqual(t2.script, t.script)
-        self.assertEqual(t2.cursor, t.cursor)
-        self.assertEqual(t2.col, t.col)
-        self.assertEqual(t2.row, t.row)
-        self.assertEqual(t2.get_current_token(), t.get_current_token())
-        t2.get_next_token()
-
-    def test_operator(self):
-        t = Tokenizer()
-        t.init("+")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "ADDITIVE_OPERATOR")
-        self.assertEqual(t.get_current_token().value, "+")
-        t.init("-")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "ADDITIVE_OPERATOR")
-        self.assertEqual(t.get_current_token().value, "-")
-        t.init("*")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "MULTIPLICATIVE_OPERATOR")
-        self.assertEqual(t.get_current_token().value, "*")
-        t.init("/")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "MULTIPLICATIVE_OPERATOR")
-        self.assertEqual(t.get_current_token().value, "/")
-        t.init("%")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "MULTIPLICATIVE_OPERATOR")
-        self.assertEqual(t.get_current_token().value, "%")
-        t.init("==")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "LOGICAL_OPERATOR")
-        self.assertEqual(t.get_current_token().value, "==")
-        t.init("!=")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "LOGICAL_OPERATOR")
-        self.assertEqual(t.get_current_token().value, "!=")
-        t.init(">")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "LOGICAL_OPERATOR")
-        self.assertEqual(t.get_current_token().value, ">")
-        t.init("<")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "LOGICAL_OPERATOR")
-        self.assertEqual(t.get_current_token().value, "<")
-        t.init(">=")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "LOGICAL_OPERATOR")
-        self.assertEqual(t.get_current_token().value, ">=")
-        t.init("<=")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "LOGICAL_OPERATOR")
-        self.assertEqual(t.get_current_token().value, "<=")
         
-
-    def test_get_next_token(self):
+    def test_tokenizer(self):
         t = Tokenizer()
-        t.init("""
-               let hello = 123;
-               hello = "world";
-               good = 123.123 + 123;
-               let right = true;
-               right = false;
-               """)
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "let")
-        self.assertEqual(t.get_current_token().value, "let")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "IDENTIFIER")
-        self.assertEqual(t.get_current_token().value, "hello")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "=")
-        self.assertEqual(t.get_current_token().value, "=")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "INT")
-        self.assertEqual(t.get_current_token().value, "123")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, ";")
-        self.assertEqual(t.get_current_token().value, ";")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "IDENTIFIER")
-        self.assertEqual(t.get_current_token().value, "hello")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "=")
-        self.assertEqual(t.get_current_token().value, "=")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "STRING")
-        self.assertEqual(t.get_current_token().value, "\"world\"")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, ";")
-        self.assertEqual(t.get_current_token().value, ";")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "IDENTIFIER")
-        self.assertEqual(t.get_current_token().value, "good")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "=")
-        self.assertEqual(t.get_current_token().value, "=")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "FLOAT")
-        self.assertEqual(t.get_current_token().value, "123.123")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "ADDITIVE_OPERATOR")
-        self.assertEqual(t.get_current_token().value, "+")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "INT")
-        self.assertEqual(t.get_current_token().value, "123")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, ";")
-        self.assertEqual(t.get_current_token().value, ";")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "let")
-        self.assertEqual(t.get_current_token().value, "let")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "IDENTIFIER")
-        self.assertEqual(t.get_current_token().value, "right")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "=")
-        self.assertEqual(t.get_current_token().value, "=")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "BOOL")
-        self.assertEqual(t.get_current_token().value, "true")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, ";")
-        self.assertEqual(t.get_current_token().value, ";")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "IDENTIFIER")
-        self.assertEqual(t.get_current_token().value, "right")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "=")
-        self.assertEqual(t.get_current_token().value, "=")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, "BOOL")
-        self.assertEqual(t.get_current_token().value, "false")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token().type, ";")
-        self.assertEqual(t.get_current_token().value, ";")
-        t.get_next_token()
-        self.assertEqual(t.get_current_token(), None)
+        t.init("a")
+        self.assertEqual(t.token().value, "a")
+        self.assertEqual(t.token().type, TokenType.IDENTIFIER)
+
+        t.init("12341")
+        self.assertEqual(t.token().value, "12341")
+        self.assertEqual(t.token().type, TokenType.INT)
+
+        t.init("12341.1234124")
+        self.assertEqual(t.token().value, "12341.1234124")
+        self.assertEqual(t.token().type, TokenType.FLOAT)
+
+        t.init("false")
+        self.assertEqual(t.token().value, "false")
+        self.assertEqual(t.token().type, TokenType.BOOL)
+
+        t.init("\"false\"")
+        self.assertEqual(t.token().value, "\"false\"")
+        self.assertEqual(t.token().type, TokenType.STRING)
+        
+        t.init("helloworld")
+        self.assertEqual(t.token().value, "helloworld")
+        self.assertEqual(t.token().type, TokenType.IDENTIFIER)
+
+        t.init("!")
+        self.assertEqual(t.token().value, "!")
+        self.assertEqual(t.token().type, TokenType.NOT)
+
+        t.init("==")
+        self.assertEqual(t.token().value, "==")
+        self.assertEqual(t.token().type, TokenType.LOGICAL_OPERATOR)
+
+        t.init("!=")
+        self.assertEqual(t.token().value, "!=")
+        self.assertEqual(t.token().type, TokenType.LOGICAL_OPERATOR)
+
+        t.init("<=")
+        self.assertEqual(t.token().value, "<=")
+        self.assertEqual(t.token().type, TokenType.LOGICAL_OPERATOR)
+
+        t.init(">=")
+        self.assertEqual(t.token().value, ">=")
+        self.assertEqual(t.token().type, TokenType.LOGICAL_OPERATOR)
+
+        t.init("<")
+        self.assertEqual(t.token().value, "<")
+        self.assertEqual(t.token().type, TokenType.LOGICAL_OPERATOR)
+
+        t.init(">")
+        self.assertEqual(t.token().value, ">")
+        self.assertEqual(t.token().type, TokenType.LOGICAL_OPERATOR)
+
+        t.init("&&")
+        self.assertEqual(t.token().value, "&&")
+        self.assertEqual(t.token().type, TokenType.LOGICAL_OPERATOR)
+
+        t.init("||")
+        self.assertEqual(t.token().value, "||")
+        self.assertEqual(t.token().type, TokenType.LOGICAL_OPERATOR)
+
+        t.init("=")
+        self.assertEqual(t.token().value, "=")
+        self.assertEqual(t.token().type, TokenType.ASSIGNMENT)
+
+        t.init("+")
+        self.assertEqual(t.token().value, "+")
+        self.assertEqual(t.token().type, TokenType.ADDITIVE_OPERATOR)
+
+        t.init("-")
+        self.assertEqual(t.token().value, "-")
+        self.assertEqual(t.token().type, TokenType.ADDITIVE_OPERATOR)
+
+        t.init("*")
+        self.assertEqual(t.token().value, "*")
+        self.assertEqual(t.token().type, TokenType.MULTIPLICATIVE_OPERATOR)
+
+        t.init("/")
+        self.assertEqual(t.token().value, "/")
+        self.assertEqual(t.token().type, TokenType.MULTIPLICATIVE_OPERATOR)
+
+        t.init("%")
+        self.assertEqual(t.token().value, "%")
+        self.assertEqual(t.token().type, TokenType.MULTIPLICATIVE_OPERATOR)
+
+        t.init("(")
+        self.assertEqual(t.token().value, "(")
+        self.assertEqual(t.token().type, TokenType.LEFT_PAREN)
+
+        t.init(")")
+        self.assertEqual(t.token().value, ")")
+        self.assertEqual(t.token().type, TokenType.RIGHT_PAREN)  
+
+        t.init("{")
+        self.assertEqual(t.token().value, "{")
+        self.assertEqual(t.token().type, TokenType.LEFT_BRACE)
+
+        t.init("}")
+        self.assertEqual(t.token().value, "}")
+        self.assertEqual(t.token().type, TokenType.RIGHT_BRACE)
+
+    def test_init(self):
+        t = Tokenizer()
+        script = "a + 9 * ( 3 - 1 ) * 3 + 10 / 2;"
+        t.init(script)
+        self.assertEqual(t.script, script)
+        self.assertEqual(len(t.tokens), 16)
+        self.assertEqual(t.get_prev(), None)
+        self.assertEqual(t.token().value, "a")
+        self.assertEqual(t.get_next().value, "+")
+        self.assertEqual(t.next().value, "+")
+        self.assertEqual(t.next().value, "9")
