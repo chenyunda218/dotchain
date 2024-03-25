@@ -1,88 +1,9 @@
 from ast import Expression
-from runtime.ast import Assignment, BoolLiteral, CallExpression, EmptyStatement, FloatLiteral, Fun, Identifier, IntLiteral, Program, Statement, StringLiteral, UnaryExpression, VariableDeclaration
+from runtime.ast import Assignment, BinaryExpression, BoolLiteral, CallExpression, EmptyStatement, FloatLiteral, Fun, Identifier, IntLiteral, Program, Statement, StringLiteral, UnaryExpression, VariableDeclaration
 from .tokenizer import Token, Tokenizer
 
 identifier_string = "IDENTIFIER"
 
-class Interpreter:
-    
-    def __init__(self) -> None:
-        self.tkr = Tokenizer()
-
-    def _get_token(self) -> Token:
-        return self.tkr.current_token
-    
-    def _get_token_type(self) -> str:
-        if self.tkr.current_token is None:
-            return None
-        return self.tkr.current_token.type
-
-    def parse(self, script: str):
-        self.tkr.init(script)
-        self.tkr.get_next_token()
-        return self.program()
-    
-    def program(self):
-        body = list[Statement]()
-        while self._get_token() is not None:
-            body.append(self.statement())
-        return Program(body)
-    
-    def statement(self):
-        token = self._get_token()
-        if token.value == "let":
-            return self.let()
-        return self.assignment()
-    
-    def assignment(self):
-        id = self.identifier()
-        self.tkr.eat("=")
-        expression = self.expression()
-        return Assignment(id, expression)
-
-    def let(self):
-        self.tkr.eat("let")
-        id = self.identifier()
-        self.tkr.eat("=")
-        expression = self.expression()
-        return VariableDeclaration(id, expression)
-    
-    def expression(self, stack: list[Expression] = []):
-        tokenType = self._get_token_type()
-        if tokenType is None:
-            raise Exception("Unexpected EOF")
-        if tokenType == "INT":
-            return self.int_literal()
-        elif tokenType == "FLOAT":
-            return self.float_literal()
-        elif tokenType == "STRING":
-            return self.string_literal()
-        elif tokenType == "BOOL":
-            return self.bool_literal()
-        elif _is_unary(self._get_token()):
-            return self.unary_expression()
-        if tokenType == ";":
-            self.tkr.eat(";")
-            return EmptyStatement()
-        return EmptyStatement()
-    
-    def unary_expression(self):
-        return UnaryExpression("+", BoolLiteral(False))
-    
-    def int_literal(self):
-        return int_literal(self.tkr)
-    
-    def float_literal(self):
-        return float_literal(self.tkr)
-    
-    def string_literal(self):
-        return string_literal(self.tkr)
-    
-    def bool_literal(self):
-        return bool_literal(self.tkr)
-
-    def identifier(self):
-        return identifier(self.tkr)
 
 def statement_parser(tkr: Tokenizer):
     token = tkr.get_current_token()
@@ -100,44 +21,22 @@ def expression_parser(tkr: Tokenizer)-> Expression:
         expression = bool_literal(tkr)
     elif token.type == "IDENTIFIER":
         expression = identifier_or_func_call_parser(tkr)
-    elif token.value in ["+", "-", "!"]:
-        expression = unary_expression_parser(tkr)
+    # TODO: Implement unary expression
     # TODO: Implement function declaration
     if expression is None and tkr.type_is("("):
-        print("good")
+        return ExpressionStack(tkr).parse()
     token = tkr.get_current_token()
     if token is None or token.value == ";":
         return expression
     if token.value not in ["+", "-", "*", "/", "%"]:
         return expression
-    
-    return expression
-    # raise Exception("Invalid expression", expression)
+    if expression is None:
+        raise Exception("Invalid expression", token)
+    stack = ExpressionStack(tkr)
+    stack.push_expression(expression)
+    return stack.parse()
 
-def binary_expression_helper(tkr: Tokenizer, first: Expression):
-    stack = ExpressionStack()
-    stack.push(first)
-    stack = [first]
-    operator_stack = list[Token]()
-    while True:
-        token = tkr.get_current_token()
-        if token is None:
-            break
-        if token.value == ";":
-            tkr.eat(";")
-            break
-        if _is_operator(token):
-            operator_stack.append(token)
-        tkr.get_next_token()
-    print(token)
-    
-    
-def unary_expression_parser(tkr: Tokenizer):
-    token = tkr.get_current_token()
-    if token.value in ["+", "-", "!"]:
-        tkr.eat(token.type)
-        return UnaryExpression(token.value, expression_parser(tkr))
-    raise Exception("Invalid unary expression")
+
     
 def identifier_or_func_call_parser(tkr: Tokenizer) -> Identifier:
     token = tkr.eat(identifier_string)
@@ -254,7 +153,7 @@ class ExpressionStack:
             while not self._end():
                 self.push()
             self.pop_all_tokens()
-            return self.expression(self.stack)
+            return self.expression()
 
         def push(self):
             token = self.tkr.get_current_token()
@@ -315,14 +214,24 @@ class ExpressionStack:
                 return 0
             return self._propity(self.top_token())
         
-        def expression(self, stack: list[Expression | Token] = [], results: list[Expression] = []):
-            for expression in stack:
-                print(expression)
+        def expression(self, index = 0, results: list[Expression] = [])-> Expression:
+            if len(self.stack) == 1:
+                return self.stack[0]
+            if index == len(self.stack):
+                return results[0]
+            token = self.stack[index]
+            if isinstance(token, Token):
+                right = results.pop()
+                left = results.pop()
+                return self.expression(index + 1, results + [BinaryExpression(left, token.value, right)])
+            return self.expression(index + 1, results + [token])
+            
 
         def _end(self):
             if self.tkr.get_current_token() is None:
                 return True
             if self.tkr.get_current_token().value == ";":
+                self.tkr.eat(";")
                 return True
             if not self._has_brackets() and self.tkr.get_current_token().value == ")":
                 return True
