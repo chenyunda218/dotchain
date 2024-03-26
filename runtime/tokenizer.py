@@ -240,3 +240,6 @@ class Tokenizer:
         if self.token() is None:
             return False
         return self.token().type == tokenType
+    
+    def the_rest(self):
+        return self.tokens[self._current_token_index:]

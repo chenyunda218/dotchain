@@ -35,6 +35,7 @@ end_statement = [
     TokenType.COMMA,
     TokenType.ARROW,
     TokenType.RETURN,
+    TokenType.LET,
     TokenType.IF,
     TokenType.ELSE,
     TokenType.WHILE,
@@ -42,6 +43,7 @@ end_statement = [
     TokenType.LOGICAL_OPERATOR,
     TokenType.ASSIGNMENT,
     TokenType.RIGHT_BRACE,
+    TokenType.LEFT_BRACE,
 ]
 
 class StatementParser:
@@ -66,7 +68,25 @@ def identifier(tkr: Tokenizer):
     tkr.next()
     return Identifier(token.value)
 
-def let_expression(tkr: Tokenizer):
+def block_expression(tkr: Tokenizer):
+    tkr.eat(TokenType.LEFT_BRACE)
+    statements = list[Statement]()
+    while not tkr.type_is(TokenType.RIGHT_BRACE):
+        if tkr.token() is None:
+            break
+        if tkr.token().type == TokenType.SEMICOLON:
+            tkr.next()
+            continue
+        statements.append(statement_parser(tkr))
+    tkr.eat(TokenType.RIGHT_BRACE)
+    return Block(statements)
+
+def statement_parser(tkr: Tokenizer):
+    if tkr.type_is(TokenType.LET):
+        return let_expression_parser(tkr)
+    return ExpressionParser(tkr).parse()
+
+def let_expression_parser(tkr: Tokenizer):
     tkr.eat(TokenType.LET)
     token = tkr.token()
     if token.type != TokenType.IDENTIFIER:
@@ -248,7 +268,6 @@ class ExpressionParser:
         if token is None:
             return True
         if token.type == TokenType.SEMICOLON:
-            self.tkr.eat(TokenType.SEMICOLON)
             return True
         if not self._has_brackets() and token.type == TokenType.RIGHT_PAREN:
             return True
