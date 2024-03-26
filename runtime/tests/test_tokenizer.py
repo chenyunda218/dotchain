@@ -2,8 +2,6 @@
 import unittest
 from runtime.tokenizer import TokenType, Tokenizer,Token
 
-
-
 class TestTokenizer(unittest.TestCase):
 
     def test_init(self):

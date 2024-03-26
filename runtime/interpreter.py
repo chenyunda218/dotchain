@@ -37,6 +37,21 @@ end_statement = [
     TokenType.RIGHT_BRACE,
 ]
 
+class StatementParser:
+
+    def __init__(self, tkr: Tokenizer):
+        self.stack = list[Expression | Token]()
+        self.operator_stack = list[Token]()
+        self.tkr = tkr
+
+    def parse(self):
+        while not self.is_end():
+            token = self.tkr.token()
+            print(token)
+    
+    def is_end(self):
+        return self.tkr.token() is None
+
 class ExpressionParser:
 
     def __init__(self, tkr: Tokenizer):

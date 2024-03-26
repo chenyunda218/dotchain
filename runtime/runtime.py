@@ -41,3 +41,4 @@ class Runtime(ABC):
     
     def variable_declaration(self, statement: VariableDeclaration):
         self.context.set_value(statement.id.name, statement.value)
+
