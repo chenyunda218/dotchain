@@ -53,6 +53,27 @@ class StatementParser:
     def is_end(self):
         return self.tkr.token() is None
 
+def identifier(tkr: Tokenizer):
+    token = tkr.token()
+    if token.type != TokenType.IDENTIFIER:
+        raise Exception("Invalid identifier", token)
+    tkr.next()
+    return Identifier(token.value)
+
+def let_expression(tkr: Tokenizer):
+    tkr.eat(TokenType.LET)
+    token = tkr.token()
+    if token.type != TokenType.IDENTIFIER:
+        raise Exception("Invalid let statement", token)
+    id = identifier(tkr)
+    token = tkr.token()
+    if token is None:
+        raise Exception("Invalid let statement", token)
+    if token.type != TokenType.ASSIGNMENT:
+        raise Exception("Invalid let statement", token.type)
+    tkr.next()
+    return VariableDeclaration(id, ExpressionParser(tkr).parse())
+
 class ExpressionParser:
 
     def __init__(self, tkr: Tokenizer):
@@ -65,6 +86,8 @@ class ExpressionParser:
             token = self.tkr.token()
             if self._try_fun_expression():
                 self.push_stack(self.fun_expression())
+            elif self.is_unary():
+                self.push_stack(self.expression_parser())
             elif self._is_operator(token) or token.type in[TokenType.LEFT_PAREN, TokenType.RIGHT_PAREN ]:
                 self.push_operator_stack(token)
                 self.tkr.next()
@@ -76,6 +99,8 @@ class ExpressionParser:
     def expression(self):
         if len(self.stack) == 0:
             return EmptyStatement()
+        if len(self.stack) == 1:
+            return self.stack[0]
         return expression_list_to_binary(self.stack)
 
     def expression_parser(self):
@@ -183,11 +208,7 @@ class ExpressionParser:
         return CallExpression(id, args)
 
     def identifier(self):
-        token = self.tkr.token()
-        if token.type != TokenType.IDENTIFIER:
-            raise Exception("Invalid identifier", token)
-        self.tkr.next()
-        return Identifier(token.value)
+        return identifier(self.tkr)
 
     def is_unary(self):
         token = self.tkr.token()
