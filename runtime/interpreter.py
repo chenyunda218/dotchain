@@ -293,7 +293,9 @@ class ExpressionParser:
     def _priority(self, token: Token):
         return _priority(token.value)
 
-def expression_list_to_binary(expression_list: list[Expression | Token], stack: list = []):
+def expression_list_to_binary(expression_list: list[Expression | Token], stack: list = None):
+    if stack is None:
+        stack = list()
     if len(expression_list) == 0:
         return stack[0]
     top = expression_list[0]

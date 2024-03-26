@@ -6,8 +6,8 @@ import json
 
 script = """
 {
-let a = hello + 3 / 4;
-let b = 3 / 4 + 5 / 9;
+    let a = hello + -3 / -4;
+    let b = -hello() + 3 / -4;
 }
 """
 
@@ -19,5 +19,3 @@ if __name__ == "__main__":
     parser = block_expression(t)
     json_object = json.dumps(parser.dict())
     print(json_object)
-    for token in  t.the_rest():
-        print(token)

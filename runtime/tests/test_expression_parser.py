@@ -146,6 +146,9 @@ class TestExpressionParser(unittest.TestCase):
         self.assertEqual(expression.callee.name, "print")
         self.assertEqual(len(expression.arguments), 4)
 
+    def test_binary_expression(self):
+        t = Tokenizer()
+
     def test__priority(self):
         self.assertEqual(_priority("*"), 0)
         self.assertEqual(_priority("/"), 0)
