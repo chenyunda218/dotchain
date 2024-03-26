@@ -1,6 +1,6 @@
 from ast import Expression
 import copy
-from runtime.ast import BinaryExpression, Block, BoolLiteral, CallExpression, EmptyStatement, FloatLiteral, Fun, Identifier, IntLiteral, Program, Statement, StringLiteral, UnaryExpression, VariableDeclaration
+from runtime.ast import Assignment, BinaryExpression, Block, BoolLiteral, CallExpression, EmptyStatement, FloatLiteral, Fun, Identifier, IntLiteral, Program, Statement, StringLiteral, UnaryExpression, VariableDeclaration
 from .tokenizer import Token, TokenType, Tokenizer
 
 unary_prev_statement = [
@@ -46,20 +46,16 @@ end_statement = [
     TokenType.LEFT_BRACE,
 ]
 
-class StatementParser:
-
-    def __init__(self, tkr: Tokenizer):
-        self.stack = list[Expression | Token]()
-        self.operator_stack = list[Token]()
-        self.tkr = tkr
-
-    def parse(self):
-        while not self.is_end():
-            token = self.tkr.token()
-            print(token)
-    
-    def is_end(self):
-        return self.tkr.token() is None
+def program_parser(tkr: Tokenizer):
+    statements = list[Statement]()
+    while tkr.token() is not None:
+        if tkr.token() is None:
+            break
+        if tkr.token().type == TokenType.SEMICOLON:
+            tkr.next()
+            continue
+        statements.append(statement_parser(tkr))
+    return Program(statements)
 
 def identifier(tkr: Tokenizer):
     token = tkr.token()
@@ -82,9 +78,19 @@ def block_expression(tkr: Tokenizer):
     return Block(statements)
 
 def statement_parser(tkr: Tokenizer):
+    token = tkr.token()
+    if token is None:
+        return EmptyStatement()
     if tkr.type_is(TokenType.LET):
         return let_expression_parser(tkr)
+    if _try_assignment_expression(tkr):
+        return assignment_parser(tkr)
     return ExpressionParser(tkr).parse()
+
+def assignment_parser(tkr: Tokenizer):
+    id = identifier(tkr)
+    tkr.eat(TokenType.ASSIGNMENT)
+    return Assignment(id, ExpressionParser(tkr).parse())
 
 def let_expression_parser(tkr: Tokenizer):
     tkr.eat(TokenType.LET)
@@ -176,7 +182,7 @@ class ExpressionParser:
         if token_type != TokenType.ARROW:
             raise Exception("Invalid fun_expression", tkr.token())
         tkr.next()
-        return Fun(args, Block([]))
+        return Fun(args, block_expression(tkr))
 
     def push_stack(self, expression: Expression | Token):
         self.stack.append(expression)
@@ -328,6 +334,23 @@ def _priority(operator: str):
         return priority
     priority += 1
     return priority
+
+def _try_assignment_expression(tkr: Tokenizer):
+    tkr = copy.deepcopy(tkr)
+    token = tkr.token()
+    print(token)
+    if token is None:
+        return False
+    if token.type != TokenType.IDENTIFIER:
+        return False
+    tkr.next()
+    token = tkr.token()
+    print(token)
+    if token is None:
+        return False
+    if token.type != TokenType.ASSIGNMENT:
+        return False
+    return True
 
 def _try_fun_expression(_tkr: Tokenizer):
     tkr = copy.deepcopy(_tkr)
