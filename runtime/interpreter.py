@@ -55,12 +55,13 @@ class ExpressionParser:
         self.pop_all()
         return self.expression()
     
-    def expression(self, index = 0, results: list[Expression] = [])-> Expression:
+    def expression(self, index = 0, results: list[Expression] = []):
         if len(self.stack) == 0:
             return EmptyStatement()
         if len(self.stack) == 1:
             return self.stack[0]
-        
+        return self.stack
+
     def expression_parser(self):
         token = self.tkr.token()
         if token is None:
@@ -125,8 +126,6 @@ class ExpressionParser:
     def pop_all(self):
         while len(self.operator_stack) > 0:
             self.pop()
-        for expression in self.stack:
-            print(expression)
 
     def push_operator_stack(self, token: Token):
         if len(self.operator_stack) == 0:
