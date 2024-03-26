@@ -1,4 +1,5 @@
 from ast import Expression
+import copy
 from runtime.ast import BinaryExpression, BoolLiteral, CallExpression, EmptyStatement, FloatLiteral, Fun, Identifier, IntLiteral, Program, Statement, StringLiteral, UnaryExpression, VariableDeclaration
 from .tokenizer import Token, TokenType, Tokenizer
 
@@ -62,7 +63,9 @@ class ExpressionParser:
     def parse(self):
         while not self.is_end():
             token = self.tkr.token()
-            if self._is_operator(token) or token.type in[TokenType.LEFT_PAREN, TokenType.RIGHT_PAREN ]:
+            if self._try_fun_expression():
+                print("func")
+            elif self._is_operator(token) or token.type in[TokenType.LEFT_PAREN, TokenType.RIGHT_PAREN ]:
                 self.push_operator_stack(token)
                 self.tkr.next()
             else:
@@ -99,30 +102,7 @@ class ExpressionParser:
         return expression
     
     def _try_fun_expression(self):
-        self.tkr.checkpoint_push()
-        token = self.tkr.token()
-        if token.type != TokenType.LEFT_PAREN:
-            self.tkr.checkpoint_push()
-            return False
-        self.tkr.eat(TokenType.LEFT_PAREN)
-        while not self.tkr.type_is(TokenType.RIGHT_PAREN):
-            if not self.tkr.type_is(TokenType.IDENTIFIER):
-                self.tkr.checkpoint_pop()
-                return False
-            self.tkr.eat(TokenType.IDENTIFIER)
-            if self.tkr.type_is(TokenType.RIGHT_PAREN):
-                break
-            if not self.tkr.type_is(TokenType.COMMA):
-                self.tkr.checkpoint_pop()
-                return False
-            self.tkr.eat(TokenType.COMMA)
-        self.tkr.eat(TokenType.RIGHT_PAREN)
-        if not self.tkr.type_is(TokenType.ARROW):
-            self.tkr.checkpoint_pop()
-            return False
-        self.tkr.eat(TokenType.ARROW)
-        self.tkr.checkpoint_push()
-        return True
+        return _try_fun_expression(self.tkr)
     
     def push_stack(self, expression: Expression | Token):
         self.stack.append(expression)
@@ -277,3 +257,28 @@ def _priority(operator: str):
         return priority
     priority += 1
     return priority
+
+def _try_fun_expression(_tkr: Tokenizer):
+    tkr = copy.deepcopy(_tkr)
+    token = tkr.token()
+    if token is None:
+        return False
+    if token.type != TokenType.LEFT_PAREN:
+        return False
+    tkr.next()
+    token_type = tkr.tokenType()
+    while token_type != TokenType.RIGHT_PAREN:
+        if token_type == TokenType.IDENTIFIER:
+            tkr.next()
+            token_type = tkr.tokenType()
+            if token_type == TokenType.RIGHT_PAREN:
+                break
+            if token_type != TokenType.COMMA:
+                return False
+            tkr.next()
+            token_type = tkr.tokenType()
+            if token_type == TokenType.RIGHT_PAREN:
+                return False
+        else:
+            return False
+    return True

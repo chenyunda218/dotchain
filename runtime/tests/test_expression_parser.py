@@ -1,12 +1,27 @@
 
 import unittest
 from runtime.ast import BoolLiteral, CallExpression, FloatLiteral, Identifier, IntLiteral, UnaryExpression
-from runtime.interpreter import ExpressionParser, _priority
+from runtime.interpreter import ExpressionParser, _priority, _try_fun_expression
 from runtime.tokenizer import TokenType, Tokenizer,Token
 
 
 
 class TestExpressionParser(unittest.TestCase):
+
+    def test__try_fun_expression(self):
+        t = Tokenizer()
+        t.init("()")
+        self.assertFalse(_try_fun_expression(t))
+
+        t.init("() =>")
+        self.assertTrue(_try_fun_expression(t))
+
+        t.init("(a) =>")
+        self.assertTrue(_try_fun_expression(t))
+
+        t.init("(a,) =>")
+        self.assertFalse(_try_fun_expression(t))
+
 
     def test_is_unary(self):
         t = Tokenizer()

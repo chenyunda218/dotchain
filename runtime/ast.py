@@ -209,7 +209,8 @@ class BinaryExpression(Expression):
 class CallExpression(Expression):
     callee: Identifier
     arguments: list[Expression]
-
+    def eval(self):
+        return self.callee.eval()(*[argument.eval() for argument in self.arguments])
     def dict(self):
         return {
             "type": "CallExpression",

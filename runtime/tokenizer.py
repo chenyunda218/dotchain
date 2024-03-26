@@ -142,6 +142,11 @@ class Tokenizer:
             self._current_token_index += 1
         return self.token()
     
+    def next_token_type(self):
+        if self._current_token_index < len(self.tokens):
+            self._current_token_index += 1
+        return self.tokenType()
+
     def prev(self):
         if self._current_token_index > 0:
             self._current_token_index -= 1
