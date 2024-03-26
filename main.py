@@ -5,7 +5,7 @@ from runtime.tokenizer import TokenType, Tokenizer, Token
 import json
 
 script = """
-(a,asd,asd,)  => ;
+(a,b,c) =>;
 """
 
 
@@ -13,10 +13,9 @@ script = """
 if __name__ == "__main__":
     t = Tokenizer()
     t.init(script)
-    print(_try_fun_expression(t))
-    # parser = ExpressionParser(t)
-    # # parser.push_token(Token(TokenType.LEFT_PAREN, "(", 0, 0, 1, 0))
-    # expression = parser.parse()
-    # json_object = json.dumps(expression.dict()) 
-    # # Print JSON object
-    # print(json_object) 
+    parser = ExpressionParser(t)
+    # parser.push_token(Token(TokenType.LEFT_PAREN, "(", 0, 0, 1, 0))
+    expression = parser.parse()
+    json_object = json.dumps(expression.dict()) 
+    # Print JSON object
+    print(json_object) 

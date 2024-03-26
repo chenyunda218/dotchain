@@ -22,6 +22,14 @@ class TestExpressionParser(unittest.TestCase):
         t.init("(a,) =>")
         self.assertFalse(_try_fun_expression(t))
 
+        t.init("(a,b,c,d) =>;")
+        self.assertTrue(_try_fun_expression(t))
+
+        t.init("(a,b,c,true) =>;")
+        self.assertFalse(_try_fun_expression(t))
+
+        t.init("(a,b,c,1.23) =>;")
+        self.assertFalse(_try_fun_expression(t))
 
     def test_is_unary(self):
         t = Tokenizer()
