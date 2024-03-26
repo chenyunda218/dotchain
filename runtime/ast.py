@@ -16,13 +16,19 @@ class Statement(Node, ABC):
 class Expression(Node):
 
     @abstractmethod
+    def eval(self):
+        return self
+
+    @abstractmethod
     def dict(self):
         pass
 
 @dataclass
 class Literal(Expression):
     value: str | int | float | bool
-
+    def eval(self):
+        return self.value
+    
     def dict(self) -> dict:
         return {
             "type": "Literal",
@@ -31,7 +37,8 @@ class Literal(Expression):
 @dataclass
 class StringLiteral(Literal):
     value: str
-
+    def eval(self):
+        return self.value
     def dict(self) -> dict:
         return {
             "type": "StringLiteral",
@@ -40,7 +47,8 @@ class StringLiteral(Literal):
 @dataclass
 class IntLiteral(Literal):
     value: int
-
+    def eval(self):
+        return self.value
     def dict(self):
         return {
             "type": "IntLiteral",
@@ -49,7 +57,8 @@ class IntLiteral(Literal):
 @dataclass
 class FloatLiteral(Literal):
     value: float
-
+    def eval(self):
+        return self.value
     def dict(self):
         return {
             "type": "FloatLiteral",
@@ -58,12 +67,24 @@ class FloatLiteral(Literal):
 @dataclass
 class BoolLiteral(Literal):
     value: bool
-    
+    def eval(self):
+        return self.value
+    def dict(self):
+        return {
+            "type": "FloatLiteral",
+            "value": self.value
+        }
 @dataclass
 class UnaryExpression(Expression):
     operator: str
     expression: Expression
-
+    def eval(self):
+        if self.operator == "-":
+            return -self.expression.eval()
+        if self.operator == "!":
+            return not self.expression.eval()
+        return self.expression.eval()
+    
     def dict(self):
         return {
             "type": "UnaryExpression",
@@ -83,7 +104,9 @@ class Program(Statement):
 @dataclass
 class Identifier(Expression):
     name: str
-
+    def eval(self):
+        return self.name
+    
     def dict(self):
         return {
             "type": "Identifier",
@@ -141,6 +164,38 @@ class BinaryExpression(Expression):
     left: Expression
     operator: str
     right: Expression
+
+    def eval(self):
+        left = self.left.eval()
+        right = self.right.eval()
+        if self.operator == "+":
+            return left + right
+        if self.operator == "-":
+            return left - right
+        if self.operator == "*":
+            return left * right
+        if self.operator == "/":
+            return left / right
+        if self.operator == "%":
+            return left % right
+        if self.operator == "<":
+            return left < right
+        if self.operator == ">":
+            return left > right
+        if self.operator == "<=":
+            return left <= right
+        if self.operator == ">=":
+            return left >= right
+        if self.operator == "==":
+            return left == right
+        if self.operator == "!=":
+            return left != right
+        if self.operator == "&&":
+            return left and right
+        if self.operator == "||":
+            return left or right
+        return None
+    
 
     def dict(self):
         return {

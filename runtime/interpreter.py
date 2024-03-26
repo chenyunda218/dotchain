@@ -55,12 +55,10 @@ class ExpressionParser:
         self.pop_all()
         return self.expression()
     
-    def expression(self, index = 0, results: list[Expression] = []):
+    def expression(self):
         if len(self.stack) == 0:
             return EmptyStatement()
-        if len(self.stack) == 1:
-            return self.stack[0]
-        return self.stack
+        return expression_list_to_binary(self.stack)
 
     def expression_parser(self):
         token = self.tkr.token()
@@ -231,6 +229,17 @@ class ExpressionParser:
     def _priority(self, token: Token):
         return _priority(token.value)
 
+def expression_list_to_binary(expression_list: list[Expression | Token], stack: list = []):
+    if len(expression_list) == 0:
+        return stack[0]
+    top = expression_list[0]
+    if isinstance(top, Token):
+        right = stack.pop()
+        left = stack.pop()
+        return expression_list_to_binary(expression_list[1:], stack + [BinaryExpression(left, top.value, right)])
+    else:
+        stack.append(top)
+        return expression_list_to_binary(expression_list[1:], stack)
 
 def _priority(operator: str):
     priority = 0
