@@ -1,12 +1,12 @@
 
 
-from runtime.interpreter import ExpressionParser, ExpressionStack, expression_parser
+from runtime.interpreter import ExpressionParser
 from runtime.runtime import Runtime
 from runtime.tokenizer import TokenType, Tokenizer, Token
 import json
 
 script = """
-(!hello);
+1 + 2 * 3 - 4 / 5;
 """
 
 if __name__ == "__main__":
@@ -16,5 +16,3 @@ if __name__ == "__main__":
     # parser.push_token(Token(TokenType.LEFT_PAREN, "(", 0, 0, 1, 0))
     expression = parser.parse()
     # print(expression.dict())
-    parser._debug_print_stack()
-    parser._debug_print_tokens()

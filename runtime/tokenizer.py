@@ -94,7 +94,7 @@ specs = (
 
 @dataclass
 class Token:
-    type: str
+    type: TokenType
     value: str
     row: int
     col: int
