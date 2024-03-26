@@ -19,8 +19,6 @@ class TokenType(Enum):
     ELSE = 13
     WHILE = 14
     FOR = 15
-    TRUE = 16
-    FALSE = 17
     FLOAT = 18
     INT = 19
     IDENTIFIER = 20
@@ -117,8 +115,10 @@ class Tokenizer:
         self.row = 0
         self._current_token_index = 0
         self.tokens = list[Token]()
+        self.checkpoint = list[int]()
     
     def init(self, script: str):
+        self.checkpoint = list[int]()
         self.tokens = list[Token]()
         self._current_token_index = 0
         self._current_token = None
@@ -130,13 +130,21 @@ class Tokenizer:
         while self._current_token is not None:
             self.tokens.append(self._current_token)
             self._get_next_token()
+
+    def checkpoint_push(self):
+        self.checkpoint.append(self._current_token_index)
+    
+    def checkpoint_pop(self):
+        self._current_token_index = self.checkpoint.pop()
     
     def next(self):
-        self._current_token_index += 1
+        if self._current_token_index < len(self.tokens):
+            self._current_token_index += 1
         return self.token()
     
     def prev(self):
-        self._current_token_index -= 1
+        if self._current_token_index > 0:
+            self._current_token_index -= 1
         return self.token()
     
     def get_prev(self):
@@ -153,6 +161,12 @@ class Tokenizer:
         if self._current_token_index >= len(self.tokens):
             return None
         return self.tokens[self._current_token_index]
+
+    def tokenType(self):
+        if self._current_token_index >= len(self.tokens):
+            return None
+        return self.tokens[self._current_token_index].type
+
 
     def _get_next_token(self):
         if self._is_eof():
@@ -176,21 +190,12 @@ class Tokenizer:
             self.col += offset
             return self.get_current_token()
         raise Exception("Unknown token: " + _string[0])
-
-    def init_and_next(self,script: str):
-        self.init(script)
-        return self._get_next_token()
-
+    
     def _is_eof(self):
         return self.cursor == len(self.script)
     
     def has_more_tokens(self):
         return self.cursor < len(self.script)
-
-    def type_is(self, tokenType: str):
-        if self._current_token == None:
-            return False
-        return self._current_token.type == tokenType
 
     def get_current_token(self):
         return self._current_token
@@ -202,41 +207,31 @@ class Tokenizer:
         self.cursor = self.cursor + matched.span(0)[1]
         return matched[0], matched.span(0)[1]
     
-    def token_list(self):
-        tokens = []
-        tokenizer = self.clone()
-        token = tokenizer._get_next_token()
-        while token is not None:
-            tokens.append(token)
-            token = tokenizer._get_next_token()
-        return tokens
+    def eat(self, value: str | TokenType):
+        if isinstance(value, str):
+            return self.eat_value(value)
+        if isinstance(value, TokenType):
+            return self.eat_token_type(value)
+    
+    def eat_value(self, value: str):
+        token = self.token()
+        if token is None:
+            raise Exception(f"Expected {value} but got None")
+        if token.value != value:
+            raise Exception(f"Expected {value} but got {token.value}")
+        self.next()
+        return token
 
-    def token_list(self):
-        tokens = []
-        tokenizer = self.clone()
-        token = tokenizer._get_next_token()
-        while token is not None:
-            tokens.append(token)
-            token = tokenizer._get_next_token()
-        return tokens
-
-    def eat(self, tokenType: str) -> Token:
-        token = self.get_current_token()
-        if token == None:
-            raise Exception("Unexpected EOF")
+    def eat_token_type(self,tokenType: TokenType):
+        token = self.token()
+        if token is None:
+            raise Exception(f"Expected {tokenType} but got None")
         if token.type != tokenType:
-            raise Exception("Unexpected token: {} != {}".format(token.type, tokenType))
-        self._get_next_token()
+            raise Exception(f"Expected {tokenType} but got {token.type}")
+        self.next()
         return token
     
-    def copy(self, tokenizer):
-        self._current_token = tokenizer._current_token
-        self.script = tokenizer.script
-        self.cursor = tokenizer.cursor
-        self.col = tokenizer.col
-        self.row = tokenizer.row
-
-    def clone(self):
-        t = Tokenizer()
-        t.copy(self)
-        return t
+    def type_is(self, tokenType: TokenType):
+        if self.token() is None:
+            return False
+        return self.token().type == tokenType
