@@ -6,7 +6,7 @@ from runtime.tokenizer import TokenType, Tokenizer, Token
 import json
 
 script = """
-(!hello + 123
+(!hello);
 """
 
 if __name__ == "__main__":

@@ -233,13 +233,31 @@ class ExpressionParser:
     def push_stack(self, expression: Expression | Token):
         self.stack.append(expression)
 
+    def _pop_by_right_paren(self):
+        token = self.operator_stack.pop()
+        if token.type != TokenType.LEFT_PAREN:
+            self.push_stack(token)
+            self._pop_by_right_paren()
+
+    def pop(self):
+        token = self.operator_stack.pop()
+        self.push_stack(token)
+        return token
+
     def push_operator_stack(self, token: Token):
-        self.operator_stack.append(token)
+        if token.type == TokenType.LEFT_PAREN:
+            self.operator_stack.append(token)
+            return
+        if token.type == TokenType.RIGHT_PAREN:
+            self._pop_by_right_paren()
+            return
+        if len(self.operator_stack) == 0:
+            self.operator_stack.append(token)
+            return
+        
 
     def unary_expression_parser(self):
         token = self.tkr.token()
-        if not self.is_unary():
-            raise Exception("Invalid unary expression", token)
         self.tkr.next()
         return UnaryExpression(token.value, ExpressionParser(self.tkr).parse())
 
@@ -439,3 +457,25 @@ class ExpressionStack:
         print("stack:----")
         for expression in self.stack:
             print(expression)
+
+
+def _priority(operator: str):
+    priority = 0
+    if operator in ["*", "/", "%"]:
+        return priority
+    priority += 1
+    if operator in ["+", "-"]:
+        return priority
+    priority += 1
+    if operator in ["<", ">", "<=", ">="]:
+        return priority
+    priority += 1
+    if operator in ["==", "!="]:
+        return priority
+    priority += 1
+    if operator in ["&&"]:
+        return priority
+    priority += 1
+    if operator in ["||"]:
+        return priority
+    return priority

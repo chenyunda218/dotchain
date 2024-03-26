@@ -1,7 +1,7 @@
 
 import unittest
 from runtime.ast import BoolLiteral, CallExpression, FloatLiteral, Identifier, IntLiteral, UnaryExpression
-from runtime.interpreter import ExpressionParser
+from runtime.interpreter import ExpressionParser, _priority
 from runtime.tokenizer import TokenType, Tokenizer,Token
 
 
@@ -122,3 +122,18 @@ class TestExpressionParser(unittest.TestCase):
         self.assertIsInstance(expression, CallExpression)
         self.assertEqual(expression.callee.name, "print")
         self.assertEqual(len(expression.arguments), 4)
+
+    def test__priority(self):
+        self.assertEqual(_priority("*"), 0)
+        self.assertEqual(_priority("/"), 0)
+        self.assertEqual(_priority("%"), 0)
+        self.assertEqual(_priority("+"), 1)
+        self.assertEqual(_priority("-"), 1)
+        self.assertEqual(_priority(">"), 2)
+        self.assertEqual(_priority("<"), 2)
+        self.assertEqual(_priority(">="), 2)
+        self.assertEqual(_priority("<="), 2)
+        self.assertEqual(_priority("=="), 3)
+        self.assertEqual(_priority("!="), 3)
+        self.assertEqual(_priority("&&"), 4)
+        self.assertEqual(_priority("||"), 5)
