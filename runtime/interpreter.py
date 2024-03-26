@@ -24,6 +24,12 @@ unary_prev_statement = [
     TokenType.ARROW,
 ]
 
+unary_end_statement = [
+    TokenType.MULTIPLICATIVE_OPERATOR,
+    TokenType.ADDITIVE_OPERATOR,
+    TokenType.LOGICAL_OPERATOR,
+]
+
 end_statement = [
     TokenType.SEMICOLON,
     TokenType.COMMA,
@@ -81,14 +87,20 @@ class ExpressionParser:
         self.operator_stack = list[Token]()
         self.tkr = tkr
 
-    def parse(self):
+    def parse(self, unary = False):
         while not self.is_end():
             token = self.tkr.token()
-            if self._try_fun_expression():
+            if unary and not self.is_unary() and token.type in unary_end_statement:
+                break
+            if self.is_unary():
+                self.push_stack(self.unary_expression_parser())
+            elif self._try_fun_expression():
                 self.push_stack(self.fun_expression())
-            elif self.is_unary():
-                self.push_stack(self.expression_parser())
-            elif self._is_operator(token) or token.type in[TokenType.LEFT_PAREN, TokenType.RIGHT_PAREN ]:
+            # -(hello x 123) // !(true and false)
+            elif unary and token.type == TokenType.LEFT_PAREN:
+                self.tkr.next()
+                self.push_stack(ExpressionParser(self.tkr).parse())
+            elif self._is_operator(token) or token.type in [TokenType.LEFT_PAREN, TokenType.RIGHT_PAREN ]:
                 self.push_operator_stack(token)
                 self.tkr.next()
             else:
@@ -108,9 +120,7 @@ class ExpressionParser:
         if token is None:
             return EmptyStatement()
         expression = None
-        if self.is_unary():
-            expression = self.unary_expression_parser()
-        elif token.type == TokenType.INT:
+        if token.type == TokenType.INT:
             self.tkr.eat(TokenType.INT)
             expression = IntLiteral(int(token.value))
         elif token.type == TokenType.FLOAT:
@@ -188,7 +198,7 @@ class ExpressionParser:
     def unary_expression_parser(self):
         token = self.tkr.token()
         self.tkr.next()
-        return UnaryExpression(token.value, ExpressionParser(self.tkr).parse())
+        return UnaryExpression(token.value, ExpressionParser(self.tkr).parse(True))
 
     def identifier_or_func_call_parser(self):
         id = self.identifier()
