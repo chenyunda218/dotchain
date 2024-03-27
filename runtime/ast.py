@@ -2,16 +2,12 @@ from abc import ABC, abstractmethod
 
 from attr import dataclass
 
-from runtime.runtime import Runtime
 
 class Node(ABC):
     pass
 
 @dataclass
 class Statement(Node, ABC):
-    
-    def exec(self, env: Runtime):
-        pass
 
     @abstractmethod
     def dict(self):
@@ -108,10 +104,6 @@ class UnaryExpression(Expression):
 class Program(Statement):
     body: list[Statement]
 
-    def exec(self, env: Runtime):
-        for statement in self.body:
-            statement.exec(env)
-
     def dict(self):
         return {
             "type": "Program",
@@ -133,11 +125,6 @@ class Identifier(Expression):
 class Block(Statement):
     body: list[Statement]
 
-    def exec(self, env: Runtime):
-        context = Runtime(env)
-        for statement in self.body:
-            statement.exec(context)
-
     def dict(self):
         return {
             "type": "Block",
@@ -148,10 +135,6 @@ class WhileStatement(Statement):
     test: Expression
     body: Block
 
-    def exec(self, env: Runtime):
-        while self.test.eval():
-            self.body.exec(env)
-
     def dict(self):
         return {
             "type": "WhileStatement",
@@ -161,8 +144,6 @@ class WhileStatement(Statement):
     
 @dataclass
 class BreakStatement(Statement):
-    def exec(self, env: Runtime):
-        raise Exception("Break statement")
 
     def dict(self):
         return {
@@ -178,20 +159,12 @@ class ReturnStatement(Statement):
             "type": "ReturnStatement",
             "value": self.value.dict()
         }
-    def exec(self, env: Runtime):
-        return self.value.eval()
 
 @dataclass
 class IfStatement(Statement):
     test: Expression
     consequent: Block
     alternate: Block
-
-    def exec(self, env: Runtime):
-        if self.test.eval():
-            self.consequent.exec(env)
-        else:
-            self.alternate.exec(env)
 
     def dict(self):
         return {
@@ -206,9 +179,6 @@ class VariableDeclaration(Statement):
     id: Identifier
     value: Expression
 
-    def exec(self, env: Runtime):
-        env.context.set_value(self.id.name, self.value.eval())
-
     def dict(self):
         return {
             "type": "VariableDeclaration",
@@ -220,11 +190,6 @@ class VariableDeclaration(Statement):
 class Assignment(Statement):
     id: Identifier
     value: Expression
-
-    def exec(self, env: Runtime):
-        if not env.context.has_value(self.id.name):
-            raise Exception(f"Variable {self.id.name} not defined")
-        env.context.set_value(self.id.name, self.value.eval())
 
     def dict(self):
         return {

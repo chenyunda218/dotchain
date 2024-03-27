@@ -18,7 +18,7 @@ let add = (left, right) => {
 add(1,2)
 add(3, add(1,2))
 // 以 . 呼叫函數，將以 . 前的值作為第一個參數
-// hello.add(2) == add(hello, 2)
+// hello.add(2) 等價於 add(hello, 2)
 ```
 
 ```bash

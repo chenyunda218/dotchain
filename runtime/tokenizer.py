@@ -90,6 +90,7 @@ specs = (
     (re.compile(r"^[+-]"), TokenType.ADDITIVE_OPERATOR),
 
     # Double-quoted strings
+    # TODO: escape character \" and
     (re.compile(r"^\"[^\"]*\""), TokenType.STRING),
 )
 
