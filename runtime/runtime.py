@@ -1,5 +1,5 @@
 
-from abc import ABC
+from abc import ABC, abstractmethod
 
 class Context:
     
@@ -7,8 +7,8 @@ class Context:
         self.values = values if values is not None else {}
     
     def get_value(self, name: str):
-        return self.values[name]
-    
+        return self.values.get(name)
+
     def has_value(self, name: str):
         return name in self.values
     
@@ -25,12 +25,23 @@ class Runtime(ABC):
         self.parent = parent
         self.context = context if context is not None else Context()
     
-    def chain_has_value(self, name: str):
-        if self.context.has_value(name):
-            return True
-        if self.parent is not None:
-            return self.parent.chain_has_value(name)
-        return False
-    
     def has_value(self, name):
         return self.context.has_value(name)
+    
+    def show_values(self):
+        self.context.show_values()
+
+    def set_value(self, name: str, value):
+        self.context.set_value(name, value)
+    
+    def get_value(self, name: str):
+        return self.context.get_value(name)
+    
+    @abstractmethod
+    def assign_value(self, name: str, value):
+        pass
+
+    @abstractmethod
+    def declare_value(self, name: str, value):
+        pass
+    

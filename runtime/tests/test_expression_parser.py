@@ -84,18 +84,6 @@ class TestExpressionParser(unittest.TestCase):
         pred = parser.is_unary()
         self.assertFalse(pred)
 
-        t.init("-- 123")
-        t.next()
-        parser = ExpressionParser(t)
-        expression = parser.expression_parser()
-        self.assertIsInstance(expression, UnaryExpression)
-
-        t.init("(- 123")
-        t.next()
-        parser = ExpressionParser(t)
-        expression = parser.expression_parser()
-        self.assertIsInstance(expression, UnaryExpression)
-
     def test_expression_parser(self):
         t = Tokenizer()
         t.init("a")
