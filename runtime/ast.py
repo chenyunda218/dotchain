@@ -2,12 +2,17 @@ from abc import ABC, abstractmethod
 
 from attr import dataclass
 
+from runtime.runtime import Runtime
+
 class Node(ABC):
     pass
 
 @dataclass
 class Statement(Node, ABC):
     
+    def exec(self, env: Runtime):
+        pass
+
     @abstractmethod
     def dict(self):
         pass
@@ -96,6 +101,10 @@ class UnaryExpression(Expression):
 class Program(Statement):
     body: list[Statement]
 
+    def exec(self, env: Runtime):
+        for statement in self.body:
+            statement.exec(env)
+
     def dict(self):
         return {
             "type": "Program",
@@ -117,6 +126,11 @@ class Identifier(Expression):
 class Block(Statement):
     body: list[Statement]
 
+    def exec(self, env: Runtime):
+        context = Runtime(env)
+        for statement in self.body:
+            statement.exec(context)
+
     def dict(self):
         return {
             "type": "Block",
@@ -126,7 +140,10 @@ class Block(Statement):
 @dataclass
 class VariableDeclaration(Statement):
     id: Identifier
-    value: Statement
+    value: Expression
+
+    def exec(self, env: Runtime):
+        env.context.set_value(self.id.name, self.value.eval())
 
     def dict(self):
         return {
@@ -138,7 +155,12 @@ class VariableDeclaration(Statement):
 @dataclass
 class Assignment(Statement):
     id: Identifier
-    value: Statement
+    value: Expression
+
+    def exec(self, env: Runtime):
+        if not env.context.has_value(self.id.name):
+            raise Exception(f"Variable {self.id.name} not defined")
+        env.context.set_value(self.id.name, self.value.eval())
 
     def dict(self):
         return {
@@ -235,3 +257,4 @@ class EmptyStatement(Statement):
         return {
             "type": "EmptyStatement"
         }
+    

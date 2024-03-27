@@ -1,7 +1,5 @@
 
 from abc import ABC
-from .ast import  Program, VariableDeclaration
-
 
 class Context:
     
@@ -23,22 +21,16 @@ class Context:
 
 class Runtime(ABC):
     
-    def __init__(self, context=None, parent=None) -> None:
+    def __init__(self, context=None, parent=ABC) -> None:
         self.parent = parent
         self.context = context if context is not None else Context()
-
-    def run(self, program: Program):
-        self.program = program
-        self.pointer = 0
-        while self.pointer < len(self.program.body):
-            statement = self.program.body[self.pointer]
-            self.execute(statement)
-            self.pointer += 1
-
-    def execute(self, statement):
-        if isinstance(statement, VariableDeclaration):
-            self.variable_declaration(statement)
     
-    def variable_declaration(self, statement: VariableDeclaration):
-        self.context.set_value(statement.id.name, statement.value)
-
+    def chain_has_value(self, name: str):
+        if self.context.has_value(name):
+            return True
+        if self.parent is not None:
+            return self.parent.chain_has_value(name)
+        return False
+    
+    def has_value(self, name):
+        return self.context.has_value(name)

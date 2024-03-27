@@ -1,15 +1,12 @@
-from runtime.ast import BinaryExpression, Expression
-from runtime.interpreter import ExpressionParser, block_expression, let_expression_parser, program_parser
-from runtime.runtime import Runtime
-from runtime.tokenizer import TokenType, Tokenizer, Token
+
+from runtime.interpreter import program_parser
+from runtime.ast import Runtime
+from runtime.program_runtime import ProgrameRuntime
+from runtime.tokenizer import Tokenizer
 import json
 
 script = """
-
-let good = 123;
-whereareyou = 10;
-hello = 12312 + 123 - -hello();
-hello();
+let hello = 1 + 2 / 4;
 """
 
 
@@ -17,6 +14,6 @@ hello();
 if __name__ == "__main__":
     t = Tokenizer()
     t.init(script)
-    parser = program_parser(t)
-    json_object = json.dumps(parser.dict())
-    print(json_object)
+    runtime = ProgrameRuntime()
+    runtime.exec(program_parser(t))
+    runtime.show_values()

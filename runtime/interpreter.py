@@ -338,14 +338,12 @@ def _priority(operator: str):
 def _try_assignment_expression(tkr: Tokenizer):
     tkr = copy.deepcopy(tkr)
     token = tkr.token()
-    print(token)
     if token is None:
         return False
     if token.type != TokenType.IDENTIFIER:
         return False
     tkr.next()
     token = tkr.token()
-    print(token)
     if token is None:
         return False
     if token.type != TokenType.ASSIGNMENT:
