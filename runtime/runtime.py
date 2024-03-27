@@ -1,11 +1,12 @@
 from ast import Expression
-from runtime.ast import Program, Statement, VariableDeclaration
+from runtime.ast import CallExpression, Program, Statement, VariableDeclaration
 
 class Runtime():
     
-    def __init__(self, context=None, parent=None) -> None:
+    def __init__(self, context=None, parent=None, exteral_fun=None) -> None:
         self.parent = parent
         self.context = context if context is not None else dict()
+        self.exteral_fun = exteral_fun if exteral_fun is not None else dict()
     
     def has_value(self, identifier: str) -> bool:
         return identifier in self.context
@@ -37,6 +38,14 @@ def exec_statement(runtime: Runtime, statement: Statement):
         exec_program(runtime, statement)
     elif isinstance(statement, Program):
         exec_program(runtime, statement)
+    elif isinstance(statement, CallExpression):
+        exec_call_expression(runtime, statement)
+
+def exec_call_expression(runtime: Runtime, call_expression: CallExpression):
+    exec_exteral_function_call(runtime, call_expression)
+
+def exec_exteral_function_call(runtime: Runtime, call_expression: CallExpression):
+    pass
 
 def exec_program(runtime: Runtime, program: Program):
     for statement in program.body:
@@ -46,4 +55,6 @@ def exec_declaration(runtime: Runtime, declaration: VariableDeclaration):
     runtime.declare(declaration.id.name, exec_eval(runtime,declaration.value))
 
 def exec_eval(runtime: Runtime, expression: Expression):
-    print(runtime)
+    if isinstance(expression, CallExpression):
+        return exec_call_expression(runtime, expression)
+    return None

@@ -5,14 +5,13 @@ from runtime.tokenizer import Tokenizer
 import json
 
 script = """
-let hello = 123;
-hello = "456";
+print();
 """
 
 if __name__ == "__main__":
     t = Tokenizer()
     t.init(script)
-    runtime = Runtime()
+    runtime = Runtime(exteral_fun={"print":print})
     ast = program_parser(t)
     json_object = json.dumps(ast.dict()) 
     print(json_object)
