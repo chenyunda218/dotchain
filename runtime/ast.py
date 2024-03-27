@@ -28,6 +28,8 @@ class Expression(Node):
     def dict(self):
         pass
 
+
+
 @dataclass
 class Literal(Expression):
     value: str | int | float | bool
@@ -39,6 +41,7 @@ class Literal(Expression):
             "type": "Literal",
             "value": self.value
         }
+    
 @dataclass
 class StringLiteral(Literal):
     value: str
@@ -49,6 +52,7 @@ class StringLiteral(Literal):
             "type": "StringLiteral",
             "value": self.value
         }
+    
 @dataclass
 class IntLiteral(Literal):
     value: int
@@ -59,6 +63,7 @@ class IntLiteral(Literal):
             "type": "IntLiteral",
             "value": self.value
         }
+    
 @dataclass
 class FloatLiteral(Literal):
     value: float
@@ -69,6 +74,7 @@ class FloatLiteral(Literal):
             "type": "FloatLiteral",
             "value": self.value
         }
+    
 @dataclass
 class BoolLiteral(Literal):
     value: bool
@@ -79,6 +85,7 @@ class BoolLiteral(Literal):
             "type": "FloatLiteral",
             "value": self.value
         }
+    
 @dataclass
 class UnaryExpression(Expression):
     operator: str
@@ -137,6 +144,26 @@ class Block(Statement):
             "body": [statement.dict() for statement in self.body]
         }
     
+@dataclass
+class IfStatement(Statement):
+    test: Expression
+    consequent: Block
+    alternate: Block
+
+    def exec(self, env: Runtime):
+        if self.test.eval():
+            self.consequent.exec(env)
+        else:
+            self.alternate.exec(env)
+
+    def dict(self):
+        return {
+            "type": "IfStatement",
+            "test": self.test.dict(),
+            "consequent": self.consequent.dict(),
+            "alternate": self.alternate.dict()
+        }
+
 @dataclass
 class VariableDeclaration(Statement):
     id: Identifier

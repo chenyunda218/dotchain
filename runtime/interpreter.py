@@ -1,6 +1,6 @@
 from ast import Expression
 import copy
-from runtime.ast import Assignment, BinaryExpression, Block, BoolLiteral, CallExpression, EmptyStatement, FloatLiteral, Fun, Identifier, IntLiteral, Program, Statement, StringLiteral, UnaryExpression, VariableDeclaration
+from runtime.ast import Assignment, BinaryExpression, Block, BoolLiteral, CallExpression, EmptyStatement, FloatLiteral, Fun, Identifier, IfStatement, IntLiteral, Program, Statement, StringLiteral, UnaryExpression, VariableDeclaration
 from .tokenizer import Token, TokenType, Tokenizer
 
 unary_prev_statement = [
@@ -40,7 +40,6 @@ end_statement = [
     TokenType.ELSE,
     TokenType.WHILE,
     TokenType.FOR,
-    TokenType.LOGICAL_OPERATOR,
     TokenType.ASSIGNMENT,
     TokenType.RIGHT_BRACE,
     TokenType.LEFT_BRACE,
@@ -56,6 +55,15 @@ def program_parser(tkr: Tokenizer):
             continue
         statements.append(statement_parser(tkr))
     return Program(statements)
+
+def if_parser(tkr: Tokenizer):
+    tkr.eat(TokenType.IF)
+    condition = ExpressionParser(tkr).parse()
+    block = block_expression(tkr)
+    if tkr.type_is(TokenType.ELSE):
+        tkr.eat(TokenType.ELSE)
+        return IfStatement(condition, block, block_expression(tkr))
+    return IfStatement(condition, block, Block([]))
 
 def identifier(tkr: Tokenizer):
     token = tkr.token()
@@ -85,6 +93,8 @@ def statement_parser(tkr: Tokenizer):
         return let_expression_parser(tkr)
     if _try_assignment_expression(tkr):
         return assignment_parser(tkr)
+    if tkr.type_is(TokenType.IF):
+        return if_parser(tkr)
     return ExpressionParser(tkr).parse()
 
 def assignment_parser(tkr: Tokenizer):
@@ -284,7 +294,7 @@ class ExpressionParser:
     def _is_operator(self, token: Token):
         if token is None:
             return False
-        return token.type in [TokenType.ADDITIVE_OPERATOR, TokenType.MULTIPLICATIVE_OPERATOR]
+        return token.type in [TokenType.ADDITIVE_OPERATOR, TokenType.MULTIPLICATIVE_OPERATOR, TokenType.LOGICAL_OPERATOR, TokenType.NOT]
     
     def _debug_print_tokens(self):
         print("operator stack:----")

@@ -6,7 +6,13 @@ from runtime.tokenizer import Tokenizer
 import json
 
 script = """
-let hello = 1 + 2 / 4;
+let hello = (a,b) => {
+    if (hello == 1) && world > 4 {
+        print("hello", 1)
+    } else {
+        print("Nonee")
+    }
+}
 """
 
 
@@ -15,5 +21,6 @@ if __name__ == "__main__":
     t = Tokenizer()
     t.init(script)
     runtime = ProgrameRuntime()
-    runtime.exec(program_parser(t))
-    runtime.show_values()
+    ast = program_parser(t)
+    json_object = json.dumps(ast.dict()) 
+    print(json_object) 

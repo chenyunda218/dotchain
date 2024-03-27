@@ -8,10 +8,10 @@ class Context:
     
     def get_value(self, name: str):
         return self.values[name]
-
+    
     def has_value(self, name: str):
         return name in self.values
-
+    
     def show_values(self):
         for name in self.values:
             print(name, self.values[name])
