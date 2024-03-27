@@ -30,7 +30,7 @@ class TokenType(Enum):
     STRING = 26
     ARROW = 27
     BOOL = 28
-
+    BREAK = 29
 specs = (
     (re.compile(r"^\n"),TokenType.NEW_LINE),
     # Space:
@@ -54,6 +54,7 @@ specs = (
     (re.compile(r"^\belse\b"), TokenType.ELSE),
     (re.compile(r"^\bwhile\b"), TokenType.WHILE),
     (re.compile(r"^\bfor\b"), TokenType.FOR),
+    (re.compile(r"^\bbreak\b"), TokenType.BREAK),
 
     (re.compile(r"^\btrue\b"), TokenType.BOOL),
     (re.compile(r"^\bfalse\b"), TokenType.BOOL),

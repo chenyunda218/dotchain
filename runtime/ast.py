@@ -143,7 +143,39 @@ class Block(Statement):
             "type": "Block",
             "body": [statement.dict() for statement in self.body]
         }
+@dataclass
+class WhileStatement(Statement):
+    test: Expression
+    body: Block
+
+    def exec(self, env: Runtime):
+        while self.test.eval():
+            self.body.exec(env)
+
+    def dict(self):
+        return {
+            "type": "WhileStatement",
+            "test": self.test.dict(),
+            "body": self.body.dict()
+        }
     
+@dataclass
+class BreakStatement(Statement):
+    def exec(self, env: Runtime):
+        raise Exception("Break statement")
+
+    def dict(self):
+        return {
+            "type": "BreakStatement"
+        }
+
+@dataclass
+class ReturnStatement(Statement):
+    value: Expression
+
+    def exec(self, env: Runtime):
+        return self.value.eval()
+
 @dataclass
 class IfStatement(Statement):
     test: Expression

@@ -1,6 +1,6 @@
 from ast import Expression
 import copy
-from runtime.ast import Assignment, BinaryExpression, Block, BoolLiteral, CallExpression, EmptyStatement, FloatLiteral, Fun, Identifier, IfStatement, IntLiteral, Program, Statement, StringLiteral, UnaryExpression, VariableDeclaration
+from runtime.ast import Assignment, BinaryExpression, Block, BoolLiteral, BreakStatement, CallExpression, EmptyStatement, FloatLiteral, Fun, Identifier, IfStatement, IntLiteral, Program, Statement, StringLiteral, UnaryExpression, VariableDeclaration, WhileStatement
 from .tokenizer import Token, TokenType, Tokenizer
 
 unary_prev_statement = [
@@ -65,6 +65,13 @@ def if_parser(tkr: Tokenizer):
         return IfStatement(condition, block, block_expression(tkr))
     return IfStatement(condition, block, Block([]))
 
+def while_parser(tkr: Tokenizer):
+    tkr.eat(TokenType.WHILE)
+    condition = ExpressionParser(tkr).parse()
+    block = block_expression(tkr)
+    return WhileStatement(condition, block)
+
+
 def identifier(tkr: Tokenizer):
     token = tkr.token()
     if token.type != TokenType.IDENTIFIER:
@@ -85,6 +92,11 @@ def block_expression(tkr: Tokenizer):
     tkr.eat(TokenType.RIGHT_BRACE)
     return Block(statements)
 
+
+def return_parser(tkr: Tokenizer):
+    tkr.eat(TokenType.RETURN)
+    return statement_parser(tkr);
+
 def statement_parser(tkr: Tokenizer):
     token = tkr.token()
     if token is None:
@@ -95,6 +107,13 @@ def statement_parser(tkr: Tokenizer):
         return assignment_parser(tkr)
     if tkr.type_is(TokenType.IF):
         return if_parser(tkr)
+    if tkr.type_is(TokenType.WHILE):
+        return while_parser(tkr)
+    if tkr.type_is(TokenType.RETURN):
+        return return_parser(tkr)
+    if tkr.type_is(TokenType.BREAK):
+        tkr.eat(TokenType.BREAK)
+        return BreakStatement()
     return ExpressionParser(tkr).parse()
 
 def assignment_parser(tkr: Tokenizer):
