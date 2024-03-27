@@ -1,6 +1,6 @@
 from ast import Expression
 import copy
-from runtime.ast import Assignment, BinaryExpression, Block, BoolLiteral, BreakStatement, CallExpression, EmptyStatement, FloatLiteral, Fun, Identifier, IfStatement, IntLiteral, Program, Statement, StringLiteral, UnaryExpression, VariableDeclaration, WhileStatement
+from runtime.ast import Assignment, BinaryExpression, Block, BoolLiteral, BreakStatement, CallExpression, EmptyStatement, FloatLiteral, Fun, Identifier, IfStatement, IntLiteral, Program, ReturnStatement, Statement, StringLiteral, UnaryExpression, VariableDeclaration, WhileStatement
 from .tokenizer import Token, TokenType, Tokenizer
 
 unary_prev_statement = [
@@ -95,7 +95,7 @@ def block_expression(tkr: Tokenizer):
 
 def return_parser(tkr: Tokenizer):
     tkr.eat(TokenType.RETURN)
-    return statement_parser(tkr);
+    return ReturnStatement(ExpressionParser(tkr).parse())
 
 def statement_parser(tkr: Tokenizer):
     token = tkr.token()

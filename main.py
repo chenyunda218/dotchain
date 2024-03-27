@@ -15,6 +15,7 @@ let hello = () => {
             print("world");
             break;
         }
+        return hello() + 4;
     }
 }
 """

@@ -173,6 +173,11 @@ class BreakStatement(Statement):
 class ReturnStatement(Statement):
     value: Expression
 
+    def dict(self):
+        return {
+            "type": "ReturnStatement",
+            "value": self.value.dict()
+        }
     def exec(self, env: Runtime):
         return self.value.eval()
 
