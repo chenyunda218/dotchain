@@ -4,11 +4,12 @@ from attr import dataclass
 
 
 class Node(ABC):
-    pass
+    def type(self):
+        return self.__class__.__name__
 
 @dataclass
 class Statement(Node, ABC):
-
+    
     @abstractmethod
     def dict(self):
         pass
@@ -106,7 +107,7 @@ class Program(Statement):
 
     def dict(self):
         return {
-            "type": "Program",
+            "type": self.type(),
             "body": [statement.dict() for statement in self.body]
         }
 @dataclass
@@ -117,7 +118,7 @@ class Identifier(Expression):
     
     def dict(self):
         return {
-            "type": "Identifier",
+            "type": self.type(),
             "name": self.name
         }
     

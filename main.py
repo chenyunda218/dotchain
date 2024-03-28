@@ -1,11 +1,17 @@
 
 from runtime.interpreter import program_parser
-from runtime.runtime import Runtime, exec_statement
+from runtime.runtime import Runtime, exec_program
 from runtime.tokenizer import Tokenizer
 import json
 
 script = """
-let hello = world();
+let a = world((a, b ) => {
+    print("labmda called");
+    return 1 + 2 * 4;
+});
+
+return 200;
+
 """
 
 if __name__ == "__main__":
@@ -15,3 +21,5 @@ if __name__ == "__main__":
     ast = program_parser(t)
     json_object = json.dumps(ast.dict()) 
     print(json_object)
+    result = exec_program(runtime, ast)
+    print(result)
