@@ -25,8 +25,6 @@ class Expression(Node):
     def dict(self):
         pass
 
-
-
 @dataclass
 class Literal(Expression):
     value: str | int | float | bool
@@ -248,7 +246,6 @@ class BinaryExpression(Expression):
             return left or right
         return None
     
-
     def dict(self):
         return {
             "type": "BinaryExpression",

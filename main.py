@@ -5,15 +5,8 @@ from runtime.tokenizer import Tokenizer
 import json
 
 script = """
-let a = world((a, b ) => {
-    print("labmda called");
-    return 1 + 2 * 4;
-});
-
-return 200;
-
+print("hello", "world");
 """
-
 if __name__ == "__main__":
     t = Tokenizer()
     t.init(script)
@@ -21,5 +14,5 @@ if __name__ == "__main__":
     ast = program_parser(t)
     json_object = json.dumps(ast.dict()) 
     print(json_object)
-    result = exec_program(runtime, ast)
-    print(result)
+    exec_program(runtime, ast)
+    runtime.show_values()
