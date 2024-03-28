@@ -184,14 +184,16 @@ class Tokenizer:
             tokenValue, offset = self.match(spec[0], _string)
             if tokenValue == None:
                 continue
-            if (spec[1] == TokenType.NEW_LINE or spec[1] == TokenType.COMMENTS):
+            if spec[1] == TokenType.NEW_LINE:
                 self.row += 1
                 self.col = 0
                 return self._get_next_token()
-            if (spec[1] == TokenType.SPACE):
+            if  spec[1] == TokenType.COMMENTS:
+                return self._get_next_token()
+            if spec[1] == TokenType.SPACE:
                 self.col += offset
                 return self._get_next_token()
-            if (spec[1] == None):
+            if spec[1] == None:
                 return self._get_next_token()
             self._current_token = Token(spec[1],tokenValue, self.cursor, self.row, self.col, self.col + offset)
             self.col += offset

@@ -47,28 +47,31 @@ end_statement = [
 
 def program_parser(tkr: Tokenizer):
     statements = list[Statement]()
-    while tkr.token() is not None:
+    count = 0
+    while True:
         if tkr.token() is None:
             break
         if tkr.token().type == TokenType.SEMICOLON:
             tkr.next()
             continue
-        statements.append(statement_parser(tkr))
+        statement = statement_parser(tkr)
+        statements.append(statement)
+        count += 1
     return Program(statements)
 
 def if_parser(tkr: Tokenizer):
     tkr.eat(TokenType.IF)
     condition = ExpressionParser(tkr).parse()
-    block = block_expression(tkr)
+    block = block_statement(tkr)
     if tkr.type_is(TokenType.ELSE):
         tkr.eat(TokenType.ELSE)
-        return IfStatement(condition, block, block_expression(tkr))
+        return IfStatement(condition, block, block_statement(tkr))
     return IfStatement(condition, block, Block([]))
 
 def while_parser(tkr: Tokenizer):
     tkr.eat(TokenType.WHILE)
     condition = ExpressionParser(tkr).parse()
-    block = block_expression(tkr)
+    block = block_statement(tkr)
     return WhileStatement(condition, block)
 
 
@@ -79,17 +82,19 @@ def identifier(tkr: Tokenizer):
     tkr.next()
     return Identifier(token.value)
 
-def block_expression(tkr: Tokenizer):
+def block_statement(tkr: Tokenizer):
     tkr.eat(TokenType.LEFT_BRACE)
     statements = list[Statement]()
-    while not tkr.type_is(TokenType.RIGHT_BRACE):
+    while True:
         if tkr.token() is None:
+            raise Exception("Invalid block expression", tkr.token())
+        if tkr.tokenType() == TokenType.RIGHT_BRACE:
+            tkr.eat(TokenType.RIGHT_BRACE)
             break
-        if tkr.token().type == TokenType.SEMICOLON:
+        if tkr.tokenType() == TokenType.SEMICOLON:
             tkr.next()
             continue
         statements.append(statement_parser(tkr))
-    tkr.eat(TokenType.RIGHT_BRACE)
     return Block(statements)
 
 
@@ -101,17 +106,20 @@ def statement_parser(tkr: Tokenizer):
     token = tkr.token()
     if token is None:
         return EmptyStatement()
-    if tkr.type_is(TokenType.LET):
+    if token.type == TokenType.SEMICOLON:
+        tkr.next()
+        return EmptyStatement()
+    if token.type == TokenType.LET:
         return let_expression_parser(tkr)
     if _try_assignment_expression(tkr):
         return assignment_parser(tkr)
-    if tkr.type_is(TokenType.IF):
+    if token.type == TokenType.IF:
         return if_parser(tkr)
-    if tkr.type_is(TokenType.WHILE):
+    if token.type == TokenType.WHILE:
         return while_parser(tkr)
-    if tkr.type_is(TokenType.RETURN):
+    if token.type == TokenType.RETURN:
         return return_parser(tkr)
-    if tkr.type_is(TokenType.BREAK):
+    if token.type == TokenType.BREAK:
         tkr.eat(TokenType.BREAK)
         return BreakStatement()
     return ExpressionParser(tkr).parse()
@@ -133,7 +141,8 @@ def let_expression_parser(tkr: Tokenizer):
     if token.type != TokenType.ASSIGNMENT:
         raise Exception("Invalid let statement", token.type)
     tkr.next()
-    return VariableDeclaration(id, ExpressionParser(tkr).parse())
+    ast = ExpressionParser(tkr).parse()
+    return VariableDeclaration(id, ast)
 
 class ExpressionParser:
 
@@ -150,7 +159,7 @@ class ExpressionParser:
             if self.is_unary():
                 self.push_stack(self.unary_expression_parser())
             elif self._try_fun_expression():
-                self.push_stack(self.fun_expression())
+                return self.fun_expression()
             # -(hello x 123) // !(true and false)
             elif unary and token.type == TokenType.LEFT_PAREN:
                 self.tkr.next()
@@ -211,7 +220,7 @@ class ExpressionParser:
         if token_type != TokenType.ARROW:
             raise Exception("Invalid fun_expression", tkr.token())
         tkr.next()
-        return Fun(args, block_expression(tkr))
+        return Fun(args, block_statement(tkr))
 
     def push_stack(self, expression: Expression | Token):
         self.stack.append(expression)
