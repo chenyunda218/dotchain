@@ -197,7 +197,7 @@ class ExpressionParser:
             self.tkr.eat(TokenType.BOOL)
             expression = BoolLiteral(token.value == "true")
         elif token.type == TokenType.IDENTIFIER:
-            expression = self.identifier_or_func_call_parser()
+            expression = self.identifier_or_fun_call_parser()
         return expression
     
     def _try_fun_expression(self):
@@ -264,19 +264,19 @@ class ExpressionParser:
         self.tkr.next()
         return UnaryExpression(token.value, ExpressionParser(self.tkr).parse(True))
 
-    def identifier_or_func_call_parser(self):
+    def identifier_or_fun_call_parser(self):
         id = self.identifier()
         tokenType = self.tkr.tokenType()
         if tokenType == TokenType.LEFT_PAREN:
-            return self.func_call_parser(id)
+            return self.fun_call_parser(id)
         return id
     
-    def func_call_parser(self, id: Identifier):
+    def fun_call_parser(self, id: Identifier):
         self.tkr.eat(TokenType.LEFT_PAREN)
         args = list[Expression]()
-        while not self.tkr.type_is(TokenType.RIGHT_PAREN):
-            args.append(self.expression_parser())
-            if self.tkr.type_is(TokenType.COMMA):
+        while self.tkr.tokenType() != TokenType.RIGHT_PAREN:
+            args.append(ExpressionParser(self.tkr).parse())
+            if self.tkr.tokenType() == TokenType.COMMA:
                 self.tkr.eat(TokenType.COMMA)
         self.tkr.eat(TokenType.RIGHT_PAREN)
         return CallExpression(id, args)

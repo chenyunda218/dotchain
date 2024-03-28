@@ -5,11 +5,7 @@ from runtime.tokenizer import Tokenizer
 import json
 
 script = """
-let hello = () => {
-    print("Hello World");
-}
-world();
-print("hell");
+let hello = world();
 """
 
 if __name__ == "__main__":
