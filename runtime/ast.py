@@ -91,12 +91,12 @@ class BoolLiteral(Literal):
 class UnaryExpression(Expression):
     operator: str
     expression: Expression
-    def eval(self):
+    def eval(self, runtime: Runtime):
         if self.operator == "-":
-            return -self.expression.eval()
+            return -self.expression.eval(runtime)
         if self.operator == "!":
-            return not self.expression.eval()
-        return self.expression.eval()
+            return not self.expression.eval(runtime)
+        return self.expression.eval(runtime)
     
     def dict(self):
         return {
@@ -327,8 +327,10 @@ class CallExpression(Expression):
             return runtime.exteral_fun[self.callee.name](*args)
         
 
-    def eval(self):
-        return self.callee.eval()(*[argument.eval() for argument in self.arguments])
+    def eval(self, runtime):
+        result = self.exec(runtime)
+        if result is not None:
+            return result.value
     
     def dict(self):
         return {

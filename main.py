@@ -5,18 +5,17 @@ from runtime.tokenizer import Tokenizer
 import json
 
 script = """
-
 let rec = (c) => {
     print(c);
     if c == 0 {
-        return;
+        return "c + 1";
     }
     rec(c-1);
 }
 
 let main = () => {
-    print("main");
-    rec(5);
+    print("hello 嘉妮");
+    print(rec(10));
 }
 
 main();
