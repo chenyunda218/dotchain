@@ -2,6 +2,11 @@ from abc import ABC, abstractmethod
 
 from attr import dataclass
 
+from runtime.runtime import Runtime
+
+@dataclass
+class ReturnValue():
+    value: any
 
 class Node(ABC):
     def type(self):
@@ -11,6 +16,11 @@ class Node(ABC):
 class Statement(Node, ABC):
     
     @abstractmethod
+    def exec(self, runtime: Runtime):
+        print(self)
+        pass
+
+    @abstractmethod
     def dict(self):
         pass
 
@@ -18,8 +28,8 @@ class Statement(Node, ABC):
 class Expression(Node):
 
     @abstractmethod
-    def eval(self):
-        return self
+    def eval(self, runtime: Runtime):
+        pass
 
     @abstractmethod
     def dict(self):
@@ -28,7 +38,7 @@ class Expression(Node):
 @dataclass
 class Literal(Expression):
     value: str | int | float | bool
-    def eval(self):
+    def eval(self, runtime: Runtime):
         return self.value
     
     def dict(self) -> dict:
@@ -40,8 +50,7 @@ class Literal(Expression):
 @dataclass
 class StringLiteral(Literal):
     value: str
-    def eval(self):
-        return self.value
+
     def dict(self) -> dict:
         return {
             "type": "StringLiteral",
@@ -51,8 +60,7 @@ class StringLiteral(Literal):
 @dataclass
 class IntLiteral(Literal):
     value: int
-    def eval(self):
-        return self.value
+    
     def dict(self):
         return {
             "type": "IntLiteral",
@@ -62,8 +70,7 @@ class IntLiteral(Literal):
 @dataclass
 class FloatLiteral(Literal):
     value: float
-    def eval(self):
-        return self.value
+    
     def dict(self):
         return {
             "type": "FloatLiteral",
@@ -73,8 +80,7 @@ class FloatLiteral(Literal):
 @dataclass
 class BoolLiteral(Literal):
     value: bool
-    def eval(self):
-        return self.value
+    
     def dict(self):
         return {
             "type": "FloatLiteral",
@@ -103,16 +109,24 @@ class UnaryExpression(Expression):
 class Program(Statement):
     body: list[Statement]
 
+    def exec(self, runtime: Runtime):
+        index = 0 
+        while index < len(self.body):
+            statement = self.body[index]
+            statement.exec(runtime)
+            index += 1
+            
     def dict(self):
         return {
             "type": self.type(),
             "body": [statement.dict() for statement in self.body]
         }
+    
 @dataclass
 class Identifier(Expression):
     name: str
-    def eval(self):
-        return self.name
+    def eval(self,runtime: Runtime):
+        return runtime.deep_get_value(self.name)
     
     def dict(self):
         return {
@@ -123,16 +137,27 @@ class Identifier(Expression):
 @dataclass
 class Block(Statement):
     body: list[Statement]
-
+    def exec(self, runtime: Runtime):
+        index = 0
+        while index < len(self.body):
+            statement = self.body[index]
+            print(statement)
+            index += 1
+            
     def dict(self):
         return {
             "type": "Block",
             "body": [statement.dict() for statement in self.body]
         }
+    
 @dataclass
 class WhileStatement(Statement):
     test: Expression
     body: Block
+
+    def exec(self, runtime: Runtime):
+        print(self)
+        pass
 
     def dict(self):
         return {
@@ -153,6 +178,10 @@ class BreakStatement(Statement):
 class ReturnStatement(Statement):
     value: Expression
 
+    def exec(self, runtime: Runtime):
+        print(self)
+        pass
+
     def dict(self):
         return {
             "type": "ReturnStatement",
@@ -165,6 +194,13 @@ class IfStatement(Statement):
     consequent: Block
     alternate: Block
 
+    def exec(self, runtime: Runtime):
+        if_runtime = Runtime(parent=runtime)
+        if self.test.eval(runtime):
+            return self.consequent.exec(if_runtime)
+        else:
+            return self.alternate.exec(if_runtime)
+        
     def dict(self):
         return {
             "type": "IfStatement",
@@ -178,6 +214,9 @@ class VariableDeclaration(Statement):
     id: Identifier
     value: Expression
 
+    def exec(self, runtime: Runtime):
+        runtime.declare(self.id.name, self.value.eval(runtime))
+
     def dict(self):
         return {
             "type": "VariableDeclaration",
@@ -189,6 +228,10 @@ class VariableDeclaration(Statement):
 class Assignment(Statement):
     id: Identifier
     value: Expression
+
+    def exec(self, runtime: Runtime):
+        print(self)
+        pass
 
     def dict(self):
         return {
@@ -215,9 +258,9 @@ class BinaryExpression(Expression):
     operator: str
     right: Expression
 
-    def eval(self):
-        left = self.left.eval()
-        right = self.right.eval()
+    def eval(self, runtime: Runtime):
+        left = self.left.eval(runtime)
+        right = self.right.eval(runtime)
         if self.operator == "+":
             return left + right
         if self.operator == "-":
@@ -258,8 +301,22 @@ class BinaryExpression(Expression):
 class CallExpression(Expression):
     callee: Identifier
     arguments: list[Expression]
+    def exec(self, runtime: Runtime,):
+        if runtime.has_value(self.callee.name):
+            fun: FunEnv = runtime.get_value(self.callee.name)
+            fun_runtime = Runtime(parent=fun.parent)
+            for index, param in enumerate(fun.body.params):
+                fun_runtime.declare(param.name, self.arguments[index].eval(runtime))
+            return fun.body.exec(fun_runtime)
+        if runtime.parent is not None:
+            return self.exec(runtime.parent)
+        if self.callee.name in runtime.exteral_fun:
+            return runtime.exteral_fun[self.callee.name](*[argument.eval(runtime) for argument in self.arguments])
+        
+
     def eval(self):
         return self.callee.eval()(*[argument.eval() for argument in self.arguments])
+    
     def dict(self):
         return {
             "type": "CallExpression",
@@ -271,6 +328,13 @@ class CallExpression(Expression):
 class Fun(Statement):
     params: list[Identifier]
     body: Block
+
+    def exec(self, runtime: Runtime):
+        print(self)
+        pass
+
+    def eval(self, runtime: Runtime):
+        return FunEnv(runtime, self)
 
     def dict(self):
         return {
@@ -285,3 +349,9 @@ class EmptyStatement(Statement):
             "type": "EmptyStatement"
         }
     
+
+class FunEnv():
+
+    def __init__(self, parent: Runtime, body: Fun):
+        self.parent = parent
+        self.body = body

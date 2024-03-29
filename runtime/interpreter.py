@@ -65,6 +65,9 @@ def if_parser(tkr: Tokenizer):
     block = block_statement(tkr)
     if tkr.type_is(TokenType.ELSE):
         tkr.eat(TokenType.ELSE)
+        if tkr.type_is(TokenType.IF):
+            print("else if")
+            return IfStatement(condition, block, Block([if_parser(tkr)]))
         return IfStatement(condition, block, block_statement(tkr))
     return IfStatement(condition, block, Block([]))
 
