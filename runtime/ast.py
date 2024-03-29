@@ -113,7 +113,9 @@ class Program(Statement):
         index = 0 
         while index < len(self.body):
             statement = self.body[index]
-            statement.exec(runtime)
+            result = statement.exec(runtime)
+            if isinstance(result, ReturnValue):
+                return result
             index += 1
             
     def dict(self):
@@ -141,7 +143,11 @@ class Block(Statement):
         index = 0
         while index < len(self.body):
             statement = self.body[index]
-            print(statement)
+            result = statement.exec(runtime)
+            if isinstance(result, ReturnValue):
+                return result
+            if isinstance(result, BreakStatement):
+                return result
             index += 1
             
     def dict(self):
@@ -156,8 +162,13 @@ class WhileStatement(Statement):
     body: Block
 
     def exec(self, runtime: Runtime):
-        print(self)
-        pass
+        while self.test.eval(runtime):
+            while_runtime = Runtime(parent=runtime,name="while")
+            result = self.body.exec(while_runtime)
+            if isinstance(result, ReturnValue):
+                return result
+            if isinstance(result, BreakStatement):
+                return result
 
     def dict(self):
         return {
@@ -169,6 +180,9 @@ class WhileStatement(Statement):
 @dataclass
 class BreakStatement(Statement):
 
+    def exec(self, _: Runtime):
+        return self
+
     def dict(self):
         return {
             "type": "BreakStatement"
@@ -179,8 +193,7 @@ class ReturnStatement(Statement):
     value: Expression
 
     def exec(self, runtime: Runtime):
-        print(self)
-        pass
+        return ReturnValue(self.value.eval(runtime))
 
     def dict(self):
         return {
@@ -230,8 +243,7 @@ class Assignment(Statement):
     value: Expression
 
     def exec(self, runtime: Runtime):
-        print(self)
-        pass
+        runtime.assign(self.id.name, self.value.eval(runtime))
 
     def dict(self):
         return {
@@ -301,17 +313,18 @@ class BinaryExpression(Expression):
 class CallExpression(Expression):
     callee: Identifier
     arguments: list[Expression]
-    def exec(self, runtime: Runtime,):
+    def exec(self, runtime: Runtime, args: list=None):
+        if args == None:
+            args = []
+            for index, argument in enumerate(self.arguments):
+                args.append(argument.eval(runtime))
         if runtime.has_value(self.callee.name):
-            fun: FunEnv = runtime.get_value(self.callee.name)
-            fun_runtime = Runtime(parent=fun.parent)
-            for index, param in enumerate(fun.body.params):
-                fun_runtime.declare(param.name, self.arguments[index].eval(runtime))
-            return fun.body.exec(fun_runtime)
+            fun:FunEnv = runtime.get_value(self.callee.name)
+            return fun.exec(args)
         if runtime.parent is not None:
-            return self.exec(runtime.parent)
+            return self.exec(runtime.parent,args)
         if self.callee.name in runtime.exteral_fun:
-            return runtime.exteral_fun[self.callee.name](*[argument.eval(runtime) for argument in self.arguments])
+            return runtime.exteral_fun[self.callee.name](*args)
         
 
     def eval(self):
@@ -330,8 +343,7 @@ class Fun(Statement):
     body: Block
 
     def exec(self, runtime: Runtime):
-        print(self)
-        pass
+        return self.body.exec(runtime)
 
     def eval(self, runtime: Runtime):
         return FunEnv(runtime, self)
@@ -355,3 +367,9 @@ class FunEnv():
     def __init__(self, parent: Runtime, body: Fun):
         self.parent = parent
         self.body = body
+    
+    def exec(self, args: list):
+        fun_runtime = Runtime(parent=self.parent)
+        for index, param in enumerate(self.body.params):
+            fun_runtime.declare(param.name, args[index])
+        return self.body.exec(fun_runtime)

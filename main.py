@@ -6,11 +6,18 @@ import json
 
 script = """
 let c = 123 + 123;
-if c < 100 {
-    print("Hello, World!");
-} else {
-    print("Goodbye, World!");
+let hello = (a) => {
+    print("hello", a);
 }
+while c > 0 {
+    let count = 12;
+    print("count", count);
+    if c < 12 {
+        break;
+    }
+    c = c - 1;
+}
+hello(123);
 """
 
 if __name__ == "__main__":
