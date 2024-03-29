@@ -5,19 +5,21 @@ from runtime.tokenizer import Tokenizer
 import json
 
 script = """
-let c = 123 + 123;
-let hello = (a) => {
-    print("hello", a);
-}
-while c > 0 {
-    let count = 12;
-    print("count", count);
-    if c < 12 {
-        break;
+
+let rec = (c) => {
+    print(c);
+    if c == 0 {
+        return;
     }
-    c = c - 1;
+    rec(c-1);
 }
-hello(123);
+
+let main = () => {
+    print("main");
+    rec(5);
+}
+
+main();
 """
 
 if __name__ == "__main__":
@@ -26,4 +28,3 @@ if __name__ == "__main__":
     runtime = Runtime(exteral_fun={"print": print})
     ast = program_parser(t)
     result = ast.exec(runtime)
-    runtime.show_values()

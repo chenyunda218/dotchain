@@ -356,6 +356,13 @@ class Fun(Statement):
         }
     
 class EmptyStatement(Statement):
+
+    def exec(self, _: Runtime):
+        return None
+    
+    def eval(self, _: Runtime):
+        return None
+
     def dict(self):
         return {
             "type": "EmptyStatement"
