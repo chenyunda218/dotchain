@@ -14,7 +14,7 @@ let add = (left, right) => {
   return left + right
 }
 
-// 函數呼叫
+// TODO： 函數呼叫
 add(1,2)
 add(3, add(1,2))
 // 以 . 呼叫函數，將以 . 前的值作為第一個參數
