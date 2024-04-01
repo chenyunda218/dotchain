@@ -31,6 +31,9 @@ class TokenType(Enum):
     ARROW = 27
     BOOL = 28
     BREAK = 29
+    TYPE_DEFINITION = 30
+    COLON = 31
+
 specs = (
     (re.compile(r"^\n"),TokenType.NEW_LINE),
     # Space:
@@ -45,6 +48,7 @@ specs = (
     (re.compile(r"^\{"), TokenType.LEFT_BRACE),
     (re.compile(r"^\}"), TokenType.RIGHT_BRACE),
     (re.compile(r"^;"), TokenType.SEMICOLON),
+    (re.compile(r"^:"), TokenType.COLON),
     (re.compile(r"^=>"), TokenType.ARROW),
 
     # Keywords:
@@ -59,6 +63,12 @@ specs = (
     (re.compile(r"^\btrue\b"), TokenType.BOOL),
     (re.compile(r"^\bfalse\b"), TokenType.BOOL),
 
+    # Type definition:
+    (re.compile(r"^\bstring\b"), TokenType.TYPE_DEFINITION),
+    (re.compile(r"^\bint\b"), TokenType.TYPE_DEFINITION),
+    (re.compile(r"^\bfloat\b"), TokenType.TYPE_DEFINITION),
+    (re.compile(r"^\bbool\b"), TokenType.TYPE_DEFINITION),
+    (re.compile(r"^\bany\b"), TokenType.TYPE_DEFINITION),
 
     # Floats:
     (re.compile(r"^[0-9]+\.[0-9]+"), TokenType.FLOAT),

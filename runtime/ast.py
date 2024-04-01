@@ -226,7 +226,7 @@ class IfStatement(Statement):
 class VariableDeclaration(Statement):
     id: Identifier
     value: Expression
-
+    value_type: str = "any"
     def exec(self, runtime: Runtime):
         runtime.declare(self.id.name, self.value.eval(runtime))
 
